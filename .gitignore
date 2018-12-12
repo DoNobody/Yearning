@@ -11,7 +11,7 @@ webpage/dist
 .Python
 src/deploy.conf
 src/exportData/*.docx
-src/core/migrations/*.py
+#src/core/migrations/*.py
 env/
 develop-eggs/
 downloads/
