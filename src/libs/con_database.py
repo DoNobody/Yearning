@@ -80,7 +80,7 @@ class SQLgo(object):
 
     def gen_alter(self, table_name):
         with self.con.cursor() as cursor:
-            sqllist = 'desc %s.%s;' % (self.db, table_name)
+            sqllist = 'desc `%s`.`%s`;' % (self.db, table_name)
             cursor.execute(sqllist)
             result = cursor.fetchall()
             td = [
@@ -97,7 +97,7 @@ class SQLgo(object):
             result = cursor.fetchall()
             tablecomment = result[0][-1]
             [item.update(TableComment=tablecomment) for item in td]
-            sqllist = 'show full columns from %s;' % (table_name)
+            sqllist = 'show full columns from `%s`;' % (table_name)
             cursor.execute(sqllist)
             result = cursor.fetchall()
             for item in td:
@@ -109,7 +109,7 @@ class SQLgo(object):
 
     def get_create_sql(self, table_name):
         with self.con.cursor() as cursor:
-            sqllist = 'show create table %s.%s;' % (self.db, table_name)
+            sqllist = 'show create table `%s`.`%s`;' % (self.db, table_name)
             cursor.execute(sqllist)
             result = cursor.fetchall()[0][1]
         return result
@@ -117,7 +117,7 @@ class SQLgo(object):
 
     def index(self, table_name):
         with self.con.cursor() as cursor:
-            cursor.execute('show keys from %s' % table_name)
+            cursor.execute('show keys from `%s`' % table_name)
             result = cursor.fetchall()
             di = [
                 {
