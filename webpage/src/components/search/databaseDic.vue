@@ -489,6 +489,7 @@ export default {
         })
         .catch(error => {
           util.err_notice(error)
+          this.$Spin.hide()
         })
     },
     // 表结构数据分页处理
