@@ -293,8 +293,11 @@
                 this.Testresults = this.allsearchdata.slice(0, 10)
                 this.total = res.data['len']
               }
+              this.$Spin.hide()
+            }).catch(error => {
+              util.err_notice(error)
+              this.$Spin.hide()
             })
-          this.$Spin.hide()
         } else {
           util.err_notice('请选择 数据库!')
         }
