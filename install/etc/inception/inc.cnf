@@ -18,7 +18,8 @@ inception_enable_blob_type=1
 inception_check_column_default_value=0
 inception_enable_autoincrement_unsigned=0
 
-inception_enable_column_charset=on
-inception_enable_identifer_keyword=on
-inception_max_update_rows=1000000
+inception_enable_column_charset=1
+inception_check_identifier=0
+inception_enable_identifer_keyword=1
+inception_max_update_rows=1000000000
 inception_osc_on=1
