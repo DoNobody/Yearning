@@ -104,7 +104,10 @@ class audit(baseview.BaseView):
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
         else:
             try:
-                sql_str = Q(work_id=work_id)&(Q(username=c_user.username)|Q(assigned=c_user.username)|Q(exceuser=c_user.username))
+                if c_user.group == "admin":
+                    sql_str = Q(work_id=work_id)
+                else:
+                    sql_str = Q(work_id=work_id)&(Q(username=c_user.username)|Q(assigned=c_user.username)|Q(exceuser=c_user.username))
                 order = SqlOrder.objects.filter(sql_str).first()
             except KeyError as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
