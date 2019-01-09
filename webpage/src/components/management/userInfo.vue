@@ -758,6 +758,9 @@
     watch: {
       searchkey: function () {
         this.lazy_data5_filterd()
+      },
+      data5: function () {
+        this.data5_filterd = util.tableSearch(this.data5, this.searchkey)
       }
     },
     mounted () {

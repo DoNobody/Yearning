@@ -117,6 +117,9 @@
     watch: {
       searchkey: function () {
         this.lazyTableDataNewFilter()
+      },
+      TableDataNew: function () {
+        this.TableDataNewFilterd = util.tableSearch(this.TableDataNew, this.searchkey)
       }
     },
     mounted () {

@@ -100,6 +100,9 @@
     watch: {
       searchkey: function () {
         this.lazytable_data_filter()
+      },
+      table_data: function () {
+        this.table_data_filterd = util.tableSearch(this.table_data, this.searchkey)
       }
     },
     mounted () {

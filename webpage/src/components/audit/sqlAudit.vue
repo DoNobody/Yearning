@@ -629,6 +629,9 @@
     watch: {
       searchkey: function () {
         this.lazysearchfilter()
+      },
+      tmp: function () {
+        this.tmp_filted = util.tableSearch(this.tmp, this.searchkey)
       }
     },
     mounted () {
@@ -636,7 +639,6 @@
       this.mou_data()
       this.reboot = setInterval(function () {
         vm.mou_data(vm.$refs.page.currentPage)
-        vm.searchkey = ''
       }, 10000)
       this.lazysearchfilter = util._.debounce(this.searchfilter, 500)
     },

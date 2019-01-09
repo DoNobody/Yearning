@@ -558,6 +558,9 @@
     watch: {
       searchkey: function () {
         this.lazy_rowdata_filterd()
+      },
+      rowdata: function () {
+        this.rowdata_filterd = util.tableSearch(this.rowdata, this.searchkey)
       }
     },
     mounted () {
