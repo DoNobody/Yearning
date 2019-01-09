@@ -6,6 +6,7 @@
           <Icon type="md-person"></Icon>
           查询审核
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <Row>
           <Col span="24">
             <Poptip
@@ -15,7 +16,7 @@
             >
               <Button type="text" style="margin-left: -1%">删除记录</Button>
             </Poptip>
-            <Table border :columns="permissoncolums" :data="query_info" stripe ref="selection"
+            <Table border :columns="permissoncolums" :data="query_info_filterd" stripe ref="selection"
                    @on-selection-change="delrecordList"></Table>
             <br>
             <Page :total="per_pn" show-elevator @on-change="permisson_list" :page-size="20" ref="perpage"></Page>
@@ -68,6 +69,7 @@
     data () {
       return {
         query_info: [],
+        query_info_filterd: [],
         permissoncolums: [
           {
             type: 'selection',
@@ -201,7 +203,8 @@
         per_pn: 1,
         delrecord: [],
         editInfodModal: false,
-        query: {}
+        query: {},
+        searchkey: ''
       }
     },
     methods: {
@@ -209,6 +212,7 @@
         axios.get(`${util.url}/query_order?page=${vl}`)
           .then(res => {
             this.query_info = res.data['data']
+            this.query_info_filterd = this.query_info
             this.per_pn = res.data['pn']
           })
           .catch(error => {
@@ -274,8 +278,16 @@
           .catch(err => util.err_notice(err))
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazy_query_info_fileter()
+      }
+    },
     mounted () {
       this.permisson_list()
+      this.lazy_query_info_fileter = util._.debounce(() => {
+        this.query_info_filterd = util.tableSearch(this.query_info, this.searchkey)
+      }, 500)
     }
   }
 </script>

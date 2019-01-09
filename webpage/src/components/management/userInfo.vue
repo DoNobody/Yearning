@@ -53,8 +53,9 @@
           <Icon type="md-people"></Icon>
           系统用户表
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table border :columns="columns6" :data="data5" stripe height="550"></Table>
+          <Table border :columns="columns6" :data="data5_filterd" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -357,6 +358,8 @@
           }
         ],
         data5: [],
+        data5_filterd: [],
+        searchkey: '',
         pagenumber: 1,
         // 新建用户
         userinfo: {
@@ -657,6 +660,7 @@
         axios.get(`${util.url}/userinfo/all?page=${vl}`)
           .then(res => {
             this.data5 = res.data.data
+            this.data5_filterd = this.data5
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -751,6 +755,11 @@
         }
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazy_data5_filterd()
+      }
+    },
     mounted () {
       this.getauthgroup()
       axios.put(`${util.url}/workorder/connection`, {'permissions_type': 'user'})
@@ -764,6 +773,9 @@
           util.err_notice(error)
         })
       this.refreshuser()
+      this.lazy_data5_filterd = util._.debounce(() => {
+        this.data5_filterd = util.tableSearch(this.data5, this.searchkey)
+      }, 500)
     }
   }
 </script>

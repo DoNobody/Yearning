@@ -50,6 +50,7 @@
           <Icon type="md-person"></Icon>
           工单审核
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <Row>
           <Col span="24">
             <template v-if="auth === 'manager' || auth === 'admin'">
@@ -61,7 +62,7 @@
               </Poptip>
               <Button type="success" @click.native="mou_data()">刷新</Button>
             </template>
-            <Table border :columns="columns6" :data="tmp" stripe ref="selection"
+            <Table border :columns="columns6" :data="tmp_filted" stripe ref="selection"
                    @on-selection-change="delrecordList"></Table>
             <br>
             <Page :total="pagenumber" show-elevator @on-change="mou_data" :page-size="20" ref="page"></Page>
@@ -450,6 +451,7 @@
           textarea: ''
         },
         tmp: [],
+        tmp_filted: [],
         pagenumber: 1,
         delrecord: [],
         togoing: null,
@@ -464,7 +466,8 @@
         auth: sessionStorage.getItem('auth'),
         multi_list: {},
         multi_name: '',
-        reboot: null
+        reboot: null,
+        searchkey: ''
       }
     },
     methods: {
@@ -568,6 +571,7 @@
           .then(res => {
             this.tmp = res.data.data
             this.tmp.forEach((item) => { (item.backup === 1) ? item.backup = '是' : item.backup = '否' })
+            this.tmp_filted = this.tmp
             this.pagenumber = res.data.page
             this.multi = res.data.multi
             this.multi_list = res.data.multi_list
@@ -617,6 +621,14 @@
             util.notice(res.data)
           })
           .catch(error => util.err_notice(error))
+      },
+      searchfilter () {
+        this.tmp_filted = util.tableSearch(this.tmp, this.searchkey)
+      }
+    },
+    watch: {
+      searchkey: function () {
+        this.lazysearchfilter()
       }
     },
     mounted () {
@@ -624,7 +636,9 @@
       this.mou_data()
       this.reboot = setInterval(function () {
         vm.mou_data(vm.$refs.page.currentPage)
+        vm.searchkey = ''
       }, 10000)
+      this.lazysearchfilter = util._.debounce(this.searchfilter, 500)
     },
     destroyed () {
       clearInterval(this.reboot)
