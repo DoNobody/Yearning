@@ -145,7 +145,7 @@ class order_detail(baseview.BaseView):
                         "select core_sqlorder.*,core_databaselist.connection_name,\
                         core_databaselist.computer_room from core_sqlorder INNER JOIN \
                         core_databaselist on core_sqlorder.bundle_id = core_databaselist.id \
-                        WHERE core_sqlorder.id = %s"
+                        WHERE core_sqlorder.id = '%s'"
                         % order_id)
                     data = util.ser(info)
                     _data = SqlRecord.objects.filter(sequence=i).first()

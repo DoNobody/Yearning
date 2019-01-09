@@ -114,6 +114,11 @@
             title: '执行时间/秒',
             key: 'execute_time',
             width: 200
+          },
+          {
+            title: '工单时间',
+            key: 'updatetime',
+            sortable: true
           }
         ],
         TableDataNew: [],
