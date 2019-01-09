@@ -47,7 +47,7 @@
               </Form-item>
               <Form-item prop="password" style="width: 100%">
                 <Input type="password" v-model="formInline.password" placeholder="ldap_Password"
-                       @on-keyup.enter="authdata()"></Input>
+                       @on-keyup.enter="ldap_login()"></Input>
               </Form-item>
               <Form-item style="width: 100%">
                 <Button type="primary" @click="ldap_login()" style="width: 100%" size="large">登录</Button>
@@ -68,8 +68,7 @@
               </Form-item>
 
               <Form-item prop="password" style="width: 100%">
-                <Input type="password" v-model="userinfo.password" placeholder="密码"
-                       @on-keyup.enter="authdata()"></Input>
+                <Input type="password" v-model="userinfo.password" placeholder="密码"></Input>
               </Form-item>
 
               <Form-item prop="confirmpassword" style="width: 100%">

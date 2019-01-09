@@ -10,9 +10,10 @@
           <Icon type="md-send"></Icon>
           历史工单执行记录
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <Row>
           <Col span="24">
-            <Table border :columns="tabcolumns" :data="TableDataNew" class="tabletop"
+            <Table border :columns="tabcolumns" :data="TableDataNewFilterd" class="tabletop"
                    style="background: #5cadff"></Table>
             <br>
             <Page :total="this.pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="page"></Page>
@@ -93,7 +94,9 @@
           }
         ],
         TableDataNew: [],
-        pagenumber: 1
+        TableDataNewFilterd: [],
+        pagenumber: 1,
+        searchkey: ''
       }
     },
     methods: {
@@ -111,8 +114,19 @@
         this.getrecordinfo(page)
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazyTableDataNewFilter()
+      },
+      TableDataNew: function () {
+        this.TableDataNewFilterd = util.tableSearch(this.TableDataNew, this.searchkey)
+      }
+    },
     mounted () {
       this.getrecordinfo()
+      this.lazyTableDataNewFilter = util._.debounce(() => {
+        this.TableDataNewFilterd = util.tableSearch(this.TableDataNew, this.searchkey)
+      }, 500)
     }
   }
 </script>

@@ -2,11 +2,12 @@
   <div>
     <Row>
       <Card>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div>
           <Button type="primary" icon="md-people" @click="createModel">添加权限组</Button>
           <br>
           <br/>
-          <Table border :columns="columns" :data="data6" stripe height="550"></Table>
+          <Table border :columns="columns" :data="data6_filterd" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -214,6 +215,8 @@
         isReadOnly: false,
         pagenumber: 1,
         data6: [],
+        data6_filterd: [],
+        searchkey: '',
         columns: [
           {
             title: 'ID',
@@ -344,6 +347,7 @@
         axios.get(`${util.url}/authgroup/all?page=${vl}`)
           .then(res => {
             this.data6 = res.data.data
+            this.data6_filterd = this.data6
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -392,6 +396,14 @@
         this.authgroup = vl.username
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazy_data6_filter()
+      },
+      data6: function () {
+        this.data6_filterd = util.tableSearch(this.data6, this.searchkey)
+      }
+    },
     mounted () {
       axios.put(`${util.url}/workorder/connection`, {'permissions_type': 'user'})
         .then(res => {
@@ -403,6 +415,9 @@
           util.err_notice(error)
         })
       this.refreshgroup()
+      this.lazy_data6_filter = util._.debounce(() => {
+        this.data6_filterd = util.tableSearch(this.data6, this.searchkey)
+      }, 500)
     }
   }
 </script>

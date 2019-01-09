@@ -87,8 +87,9 @@
           <Icon type="md-apps" />
           数据库详情表
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table :columns="columns" :data="rowdata" height="550"></Table>
+          <Table :columns="columns" :data="rowdata_filterd" height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="mountdata" :page-size="10" ref="totol"></Page>
@@ -230,6 +231,8 @@
           }
         ],
         rowdata: [],
+        rowdata_filterd: [],
+        searchkey: '',
         modal: false,
         // 添加数据库信息
         formItem: {
@@ -508,6 +511,7 @@
         axios.get(`${util.url}/management_db/all/?page=${vl}&permissions_type=base`)
           .then(res => {
             this.rowdata = res.data.data
+            this.rowdata_filterd = this.rowdata
             this.pagenumber = parseInt(res.data.page)
             this.diclist = res.data.diclist
             this.dataset = res.data['custom']
@@ -551,8 +555,19 @@
           .catch(err => util.err_notice(err))
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazy_rowdata_filterd()
+      },
+      rowdata: function () {
+        this.rowdata_filterd = util.tableSearch(this.rowdata, this.searchkey)
+      }
+    },
     mounted () {
       this.mountdata()
+      this.lazy_rowdata_filterd = util._.debounce(() => {
+        this.rowdata_filterd = util.tableSearch(this.rowdata, this.searchkey)
+      }, 500)
     }
   }
 </script>
