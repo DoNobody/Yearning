@@ -10,9 +10,10 @@
           <Icon type="md-person"></Icon>
           查询审计
         </p>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <Row>
           <Col span="24">
-            <Table border :columns="columns" :data="table_data" stripe size="small"></Table>
+            <Table border :columns="columns" :data="table_data_filterd" stripe size="small"></Table>
           </Col>
         </Row>
         <br>
@@ -78,7 +79,9 @@
         ],
         page_number: 1,
         computer_room: util.computer_room,
-        table_data: []
+        table_data: [],
+        table_data_filterd: [],
+        searchkey: ''
       }
     },
     methods: {
@@ -86,6 +89,7 @@
         axios.get(`${util.url}/query_worklf?page=${vl}`)
           .then(res => {
             this.table_data = res.data.data
+            this.table_data_filterd = this.table_data
             this.page_number = res.data.page
           })
           .catch(error => {
@@ -93,8 +97,16 @@
           })
       }
     },
+    watch: {
+      searchkey: function () {
+        this.lazytable_data_filter()
+      }
+    },
     mounted () {
       this.currentpage()
+      this.lazytable_data_filter = util._.debounce(() => {
+        this.table_data_filterd = util.tableSearch(this.table_data, this.searchkey)
+      }, 500)
     }
   }
 </script>

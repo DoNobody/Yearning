@@ -78,7 +78,7 @@ class Record(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = SqlRecord
-        fields = ('sql', 'state', 'error', 'affectrow', 'sequence', 'execute_time')
+        fields = ('sql', 'state', 'error', 'affectrow', 'sequence', 'execute_time', 'updatetime')
 
 
 class Getdingding(serializers.HyperlinkedModelSerializer):
@@ -126,7 +126,7 @@ class Query_list(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = querypermissions
-        fields = ('id', 'statements')
+        fields = ('id', 'statements', 'updatetime')
 
 
 class AuthGroup_Serializers(serializers.HyperlinkedModelSerializer):

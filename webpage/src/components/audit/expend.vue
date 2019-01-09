@@ -31,6 +31,11 @@
             title: '查询语句:',
             key: 'statements',
             sortable: true
+          },
+          {
+            title: '查询时间',
+            key: 'updatetime',
+            sortable: true
           }
         ],
         TableDataNew: []

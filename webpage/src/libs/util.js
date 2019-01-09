@@ -1,6 +1,7 @@
 import env from '../../config/env';
 import Notice from 'iview/src/components/notice'
 import { appRouter } from '../router'
+const _ = require('lodash')
 
 let util = {}
 util.title = function (title) {
@@ -128,5 +129,22 @@ util.filternode = function (node, key) {
   }
   return result
 }
+
+util.tableSearch = function (source, searchkey) {
+  let result = JSON.parse(JSON.stringify(source))
+  if (searchkey.length !== 0) {
+      result = source.filter((v) => {
+      for (let item of Object.values(v)) {
+        if (item && item.toString().indexOf(searchkey) !== -1) {
+          return true
+        }
+      }
+      return false
+    })
+  }
+  return result
+}
+
+util._ = _
 
 export default util

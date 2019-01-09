@@ -50,6 +50,7 @@
             </Card>
           </Row>
           <Row>
+            <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata.length"></Input>
             <Table :columns="columnsName"
               :data="Testresults"
               highlight-row
@@ -71,7 +72,6 @@
   import util from '../../libs/util'
   import Csv from '../../../node_modules/iview/src/utils/csv'
   import ExportCsv from '../../../node_modules/iview/src/components/table/export-csv'
-  const _ = require('lodash')
 
   const exportcsv = function exportCsv (params) {
     if (params.filename) {
@@ -127,6 +127,7 @@
         id: null,
         total: 0,
         allsearchdata: [],
+        allsearchdata_filtered: [],
         put_info: {
           base: '',
           tablename: '',
@@ -135,7 +136,9 @@
         },
         wordList: [],
         searchkey: '',
-        splice_length: 10
+        splice_length: 10,
+        page: 1,
+        filtertablekey: ''
       }
     },
     methods: {
@@ -229,11 +232,12 @@
           })
       },
       splice_arr (page) {
-        this.Testresults = this.allsearchdata.slice((page - 1) * this.splice_length, page * this.splice_length)
+        this.page = page
+        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       },
       splice_len (length) {
         this.splice_length = length
-        this.Testresults = this.allsearchdata.slice(0, this.splice_length)
+        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       },
       ClearForm () {
         this.formItem.textarea = ''
@@ -242,6 +246,7 @@
         this.columnsName = []
         this.$refs.totol.currentPage = 1
         this.total = 0
+        this.page = 1
       },
       Search_sql () {
         if (this.put_info.dbcon && this.put_info.base) {
@@ -273,6 +278,7 @@
                 util.err_notice(res.data)
               } else {
                 this.allsearchdata = res.data['data']
+                this.allsearchdata_filtered = this.allsearchdata
                 let dataFirst = this.allsearchdata[0]
                 let dataWidth = {}
                 for (let item in dataFirst) {
@@ -290,7 +296,6 @@
                   }
                   return item
                 })
-                this.Testresults = this.allsearchdata.slice(0, 10)
                 this.total = res.data['len']
               }
               this.$Spin.hide()
@@ -368,6 +373,11 @@
             })
           }
         })
+      this.debouncedFilter = util._.debounce(this.keyfilter, 500)
+      this.debouncedSelect = util._.debounce(this.setSelect, 500)
+      this.debouncedFilterTable = util._.debounce(() => {
+        this.allsearchdata_filtered = util.tableSearch(this.allsearchdata, this.filtertablekey)
+      }, 500)
     },
     watch: {
       searchkey: function (newkey, oldkey) {
@@ -375,11 +385,13 @@
       },
       tmpGetselect: function (newselect, oldselect) {
         this.debouncedSelect()
+      },
+      filtertablekey: function () {
+        this.debouncedFilterTable()
+      },
+      allsearchdata_filtered: function () {
+        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       }
-    },
-    created: function () {
-      this.debouncedFilter = _.debounce(this.keyfilter, 500)
-      this.debouncedSelect = _.debounce(this.setSelect, 500)
     }
   }
 </script>
