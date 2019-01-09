@@ -4,8 +4,8 @@ services:
   db:
     container_name: mysql
     image: mysql:5.7
-    ports:
-      - 3306:3306
+    # ports:
+    #  - 3306:3306
     volumes:
       - /server/docker_share/mysql:/var/lib/mysql
       - /etc/timezone:/etc/timezone
