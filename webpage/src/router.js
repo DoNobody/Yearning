@@ -219,16 +219,6 @@ export const appRouter = [
         }
       },
       {
-        path: 'audit-permissions',
-        name: 'audit-permissions',
-        title: '权限',
-        'icon': 'md-share',
-        access: 2,
-        component: resolve => {
-          require(['./components/audit/permissions.vue'], resolve)
-        }
-      },
-      {
         path: 'query-audit',
         name: 'query-audit',
         title: '查询',
