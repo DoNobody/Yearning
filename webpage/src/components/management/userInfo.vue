@@ -30,7 +30,7 @@
             <FormItem label="角色" prop="group">
               <Select v-model="userinfo.group" placeholder="请选择">
                 <Option value="admin">管理员</Option>
-                <Option value="manager" v-if="connectionList.multi">审核人员</Option>
+                <Option value="manager" v-if="multi">审核人员</Option>
                 <Option value="perform">使用人</Option>
               </Select>
             </FormItem>
@@ -92,9 +92,9 @@
           <Input v-model="editAuthForm.real_name" readonly="readonly"></Input>
         </FormItem>
         <FormItem label="角色">
-          <Select v-model="editAuthForm.group" placeholder="请选择">
+          <Select v-model="editAuthForm.group" placeholder="请选择" :disabled="groupDisabled">
             <Option value="admin">管理员</Option>
-            <Option value="manager" v-if="connectionList.multi && editAuthForm.id !== 1">审批人</Option>
+            <Option value="manager" v-if="multi && editAuthForm.id !== 1">审批人</Option>
             <Option value="perform" v-if="editAuthForm.id !== 1">使用者</Option>
           </Select>
         </FormItem>
@@ -102,7 +102,7 @@
           <Input v-model="editAuthForm.department" placeholder="请输入新部门"></Input>
         </FormItem>
         <FormItem label="权限组" prop="authgroup">
-          <Select v-model="editAuthForm.authgroup" multiple @on-change="getgrouplist" placeholder="请选择">
+          <Select v-model="editAuthForm.authgroup" multiple @on-change="getgrouplist" placeholder="请选择" :disabled="groupDisabled && editAuthForm.group === 'admin'">
             <Option v-for="list in groupset" :value="list" :key="list">{{ list }}</Option>
           </Select>
           <template>
@@ -374,6 +374,7 @@
           realname: ''
         },
         groupset: [],
+        groupDisabled: true,
         userinfoValidate: {
           username: [{
             required: true,
@@ -548,11 +549,8 @@
           dic: true,
           person: true
         },
-        connectionList: {
-          connection: [],
-          dic: [],
-          person: [],
-          multi: Boolean
+        multi: {
+          type: Boolean
         },
         permission_list: {}
       }
@@ -576,10 +574,12 @@
         axios.get(`${util.url}/authgroup/group_name`)
           .then(res => {
             this.groupset = res.data.authgroup
+            this.multi = res.data.multi
           })
           .catch(error => {
             util.err_notice(error)
           })
+        this.groupDisabled = parseInt(sessionStorage.getItem('access')) !== 3
       },
       edituser (index) {
         this.editPasswordModal = true
@@ -734,25 +734,6 @@
         } else {
           this.$Message.error('用户名不一致!请重新操作!')
         }
-      },
-      ddlCheckAll (name, indeterminate, ty) {
-        if (this.indeterminate[indeterminate]) {
-          this.checkAll[indeterminate] = false
-        } else {
-          this.checkAll[indeterminate] = !this.checkAll[indeterminate]
-        }
-        this.indeterminate[indeterminate] = false
-        if (this.checkAll[indeterminate]) {
-          if (ty === 'dic') {
-            this.permission[name] = this.connectionList[ty].map(vl => vl.Name)
-          } else if (ty === 'person') {
-            this.permission[name] = this.connectionList[ty].map(vl => vl.username)
-          } else {
-            this.permission[name] = this.connectionList[ty].map(vl => vl.connection_name)
-          }
-        } else {
-          this.permission[name] = []
-        }
       }
     },
     watch: {
@@ -765,16 +746,6 @@
     },
     mounted () {
       this.getauthgroup()
-      axios.put(`${util.url}/workorder/connection`, {'permissions_type': 'user'})
-        .then(res => {
-          this.connectionList.connection = res.data['connection']
-          this.connectionList.dic = res.data['dic']
-          this.connectionList.person = res.data['person']
-          this.connectionList.multi = res.data['multi']
-        })
-        .catch(error => {
-          util.err_notice(error)
-        })
       this.refreshuser()
       this.lazy_data5_filterd = util._.debounce(() => {
         this.data5_filterd = util.tableSearch(this.data5, this.searchkey)
