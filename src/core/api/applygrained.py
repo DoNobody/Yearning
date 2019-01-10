@@ -15,9 +15,9 @@ class audit_grained(baseview.SuperUserpermissions):
 
     def get(self, request, args: str = None):
 
-        user_id = Account.objects.filter(username=request.user).first().id
+        user_group = Account.objects.filter(username=request.user).first().group
         page = request.GET.get('page')
-        if user_id == 1:
+        if user_group == 'admin':
             pn = applygrained.objects.count()
             start = int(page) * 10 - 10
             end = int(page) * 10
