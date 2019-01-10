@@ -32,11 +32,13 @@
           <Icon :type="item.icon" :size="iconSize"></Icon>
           <span class="layout-text">{{ item.title }}</span>
         </template>
-        <template v-for="child of item.children">
-          <MenuItem :name="child.name" :key="child.name" style="margin-left: -5%">
-            <Icon :type="child.icon" :size="iconSize" :key="child.name"></Icon>
-            <span class="layout-text" :key="child.name + 1">{{ child.title }}</span>
-          </MenuItem>
+        <template v-for="child in item.children">
+          <template v-if="filtermenulist[child.name] === '1'">
+            <MenuItem :name="child.name" :key="child.name" style="margin-left: -5%">
+              <Icon :type="child.icon" :size="iconSize" :key="child.name"></Icon>
+              <span class="layout-text" :key="child.name + 1">{{ child.title }}</span>
+            </MenuItem>
+          </template>
         </template>
       </Submenu>
     </template>
@@ -59,7 +61,20 @@
     },
     data () {
       return {
-        filtermenulist: []
+        filtermenulist: {
+          'ddledit': '',
+          'dmledit': '',
+          'view-dml': '',
+          'querypage': '1',
+          'management-user': '',
+          'management-database': '',
+          'audit-audit': '1',
+          'audit-record': '1',
+          'audit-permissions': '1',
+          'query-review': '1',
+          'query-audit': '1',
+          'auth-group': '1'
+        }
       }
     },
     computed: {
@@ -84,7 +99,13 @@
       axios.get(`${util.url}/homedata/menu`)
         .then(res => {
           let c = JSON.parse(res.data)
-          this.filtermenulist = Object.keys(c).filter((item) => c[item] === '1')
+          this.filtermenulist.ddledit = c.ddl
+          this.filtermenulist.indexedit = c.ddl
+          this.filtermenulist.dmledit = c.dml
+          this.filtermenulist['view-dml'] = c.dic
+          this.filtermenulist['management-user'] = c.user
+          this.filtermenulist['management-database'] = c.base
+          this.filtermenulist['querypage'] = c.query
         })
     }
   }
