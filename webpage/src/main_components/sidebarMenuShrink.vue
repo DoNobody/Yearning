@@ -84,14 +84,15 @@
           'dmledit': '',
           'view-dml': '',
           'querypage': '1',
-          'management-user': '',
-          'management-database': '',
           'audit-audit': '1',
           'audit-record': '1',
           'audit-permissions': '1',
           'query-review': '1',
           'query-audit': '1',
-          'auth-group': '1'
+          'management-user': '',
+          'management-database': '',
+          'auth-group': '0',
+          'setting': '0'
         }
       }
     },
@@ -120,6 +121,15 @@
           this.filtermenulist['management-database'] = c.base
           this.filtermenulist['querypage'] = c.query
         })
+      if (parseInt(sessionStorage.getItem('access')) === 3) {
+        console.log(parseInt(sessionStorage.getItem('access')))
+        this.filtermenulist['auth-group'] = '1'
+        this.filtermenulist['management-user'] = '1'
+        this.filtermenulist['management-database'] = '1'
+        if (sessionStorage.getItem('user') === 'admin') {
+          this.filtermenulist['setting'] = '1'
+        }
+      }
     }
   }
 </script>
