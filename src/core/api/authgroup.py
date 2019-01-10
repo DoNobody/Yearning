@@ -4,9 +4,10 @@
 import logging
 import json
 from django.http import HttpResponse
-from libs import baseview
+from libs import baseview, util
 from rest_framework.response import Response
 from core.models import Account, grained
+import ast
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
@@ -16,7 +17,7 @@ class auth_group(baseview.BaseView):
     def get(self, request, args: str = None):
         if args == 'all':
             user = Account.objects.filter(username=request.user).first()
-            if user.group != 'admin':
+            if user.group not in  ['admin','manager']:
                 return HttpResponse(status=401)
             else:
                 try:
@@ -50,9 +51,11 @@ class auth_group(baseview.BaseView):
 
         elif args == 'group_name':
             try:
+                un_init = util.init_conf()
+                custom_com = ast.literal_eval(un_init['other'])
                 obj = grained.objects.values('username')
                 group_list = [x['username'] for x in obj]
-                return Response({'authgroup': group_list})
+                return Response({'authgroup': group_list, 'multi': custom_com['multi']})
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(e)
@@ -68,6 +71,7 @@ class auth_group(baseview.BaseView):
             return HttpResponse(e)
 
     def put(self, request, args: str = None):
+        user = Account.objects.filter(username=request.user).first()
         if args == 'group_list':
             try:
                 group_str = request.data['group_list']
@@ -108,23 +112,24 @@ class auth_group(baseview.BaseView):
                 group = request.data['group']
                 department = request.data['department']
                 authgroup = request.data['auth_group']
-                pr = 1
+                pr = 0
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(e)
             else:
                 try:
-                    if group == "perform":
-                        pr = 0
-                    if not authgroup:
-                        Account.objects.filter(username=username).update(group=group,
-                                                                         department=department, auth_group=None,
-                                                                         is_staff=pr)
-                    else:
+                    if group == "admin":
+                        pr = 1
+                    auth_group_str = None
+                    if authgroup:
                         auth_group_str = (",".join(authgroup))
+                    if user.group == "admin":
                         Account.objects.filter(username=username).update(group=group,
-                                                                         department=department,
-                                                                         auth_group=auth_group_str, is_staff=pr)
+                                                                        department=department,
+                                                                        auth_group=auth_group_str, is_staff=pr)
+                    elif user.group == "manager":
+                        Account.objects.filter(username=username).update(department=department,
+                                                                        auth_group=auth_group_str)
                     return Response('权限保存成功!')
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
