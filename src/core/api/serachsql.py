@@ -97,9 +97,10 @@ class search(baseview.BaseView):
             return Response('非法请求,账号无查询权限！')
 
     def put(self, request, args: str = None):
-        base = request.data['base']
-        table = request.data['table']
-        dbcon = request.data['dbcon']
+        base = request.data.get('base','')
+        table = request.data.get('table', '')
+        dbcon = request.data.get('dbcon', '')
+        delaytime = request.data.get('delaytime', 0)
         query_per = query_order.objects.filter(username=request.user, connection_name=dbcon, query_per=1).first()
         if query_per and query_per.query_per == 1:
             _c = DatabaseList.objects.filter(
@@ -114,10 +115,13 @@ class search(baseview.BaseView):
                         port=_c.port,
                         db=base
                 ) as f:
-                    data_set = f.search(sql='desc `%s`' % table)
+                    if delaytime:
+                        data_set = f.search(sql='show slave status')
+                    else:
+                        data_set = f.search(sql='desc `%s`' % table)
                 return Response(data_set)
-            except:
-                return Response('')
+            except Exception as e:
+                return Response({'error': '{}'.format(e)})
         else:
             return Response({'error': '非法请求,账号无查询权限！'})
 

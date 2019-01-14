@@ -90,8 +90,8 @@ class apply_grained(baseview.BaseView):
         except Exception as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
 
-            finally:
-                return Response('权限申请已提交!')
+        finally:
+            return Response('权限申请已提交!')
 
 
 def push_message(message=None, type=None, user=None, to_addr=None, work_id=None, status=None):

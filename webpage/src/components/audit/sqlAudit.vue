@@ -62,7 +62,7 @@
               </Poptip>
               <Button type="success" @click.native="mou_data()">刷新</Button>
             </template>
-            <Table border :columns="columns6" :data="tmp_filted" stripe ref="selection"
+            <Table border :columns="columns6" :data="tmp" stripe ref="selection"
                    @on-selection-change="delrecordList"></Table>
             <br>
             <Page :total="pagenumber" show-elevator @on-change="mou_data" :page-size="20" ref="page"></Page>
@@ -451,7 +451,7 @@
           textarea: ''
         },
         tmp: [],
-        tmp_filted: [],
+        tmp_origin: [],
         pagenumber: 1,
         delrecord: [],
         togoing: null,
@@ -569,9 +569,9 @@
       mou_data (vl = 1) {
         axios.get(`${util.url}/audit_sql?page=${vl}&username=${sessionStorage.getItem('user')}`)
           .then(res => {
-            this.tmp = res.data.data
-            this.tmp.forEach((item) => { (item.backup === 1) ? item.backup = '是' : item.backup = '否' })
-            this.tmp_filted = this.tmp
+            this.tmp_origin = res.data.data
+            this.tmp_origin.forEach((item) => { (item.backup === 1) ? item.backup = '是' : item.backup = '否' })
+            this.tmp = JSON.parse(JSON.stringify(this.tmp_origin))
             this.pagenumber = res.data.page
             this.multi = res.data.multi
             this.multi_list = res.data.multi_list
@@ -621,17 +621,11 @@
             util.notice(res.data)
           })
           .catch(error => util.err_notice(error))
-      },
-      searchfilter () {
-        this.tmp_filted = util.tableSearch(this.tmp, this.searchkey)
       }
     },
     watch: {
       searchkey: function () {
-        this.lazysearchfilter()
-      },
-      tmp: function () {
-        this.tmp_filted = util.tableSearch(this.tmp, this.searchkey)
+        this.lazysearchtmp()
       }
     },
     mounted () {
@@ -640,7 +634,11 @@
       this.reboot = setInterval(function () {
         vm.mou_data(vm.$refs.page.currentPage)
       }, 10000)
-      this.lazysearchfilter = util._.debounce(this.searchfilter, 500)
+    },
+    created () {
+      this.lazysearchtmp = util._.debounce(() => {
+        this.tmp = util.tableSearch(this.tmp_origin, this.searchkey)
+      }, 500)
     },
     destroyed () {
       clearInterval(this.reboot)

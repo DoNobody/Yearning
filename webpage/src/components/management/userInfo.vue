@@ -55,7 +55,7 @@
         </p>
         <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table border :columns="columns6" :data="data5_filterd" stripe height="550"></Table>
+          <Table border :columns="columns6" :data="data5" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -358,7 +358,7 @@
           }
         ],
         data5: [],
-        data5_filterd: [],
+        data5_origin: [],
         searchkey: '',
         pagenumber: 1,
         // 新建用户
@@ -659,8 +659,8 @@
       refreshuser (vl = 1) {
         axios.get(`${util.url}/userinfo/all?page=${vl}`)
           .then(res => {
-            this.data5 = res.data.data
-            this.data5_filterd = this.data5
+            this.data5_origin = res.data.data
+            this.data5 = JSON.parse(JSON.stringify(this.data5_origin))
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -738,17 +738,16 @@
     },
     watch: {
       searchkey: function () {
-        this.lazy_data5_filterd()
-      },
-      data5: function () {
-        this.data5_filterd = util.tableSearch(this.data5, this.searchkey)
+        this.lazy_data5()
       }
     },
     mounted () {
       this.getauthgroup()
       this.refreshuser()
-      this.lazy_data5_filterd = util._.debounce(() => {
-        this.data5_filterd = util.tableSearch(this.data5, this.searchkey)
+    },
+    created () {
+      this.lazy_data5 = util._.debounce(() => {
+        this.data5 = util.tableSearch(this.data5_origin, this.searchkey)
       }, 500)
     }
   }

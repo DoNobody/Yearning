@@ -40,9 +40,13 @@
                   查询已选择</Button>
                 <Button v-else type="success" icon="ios-redo" @click.native="Search_sql()">查询</Button>
                 <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" v-if="put_info.export_data">导出查询数据</Button>
-                <span>
+                <span v-if = "put_info.base">
                   <b>当前选择的库:</b>
-                  <span v-if = "put_info.base">{{put_info.dbcon}} . {{put_info.base}}</span>
+                  <span>{{put_info.dbcon}} . {{put_info.base}}</span>
+                  <b>延时:</b>
+                  <span v-if="put_info.slave_delay > 0" style="background-color:red;">{{ put_info.slave_delay }}</span>
+                  <span v-else>{{ put_info.slave_delay }}</span>
+                  <b>秒</b>
                 </span>
               </div>
               <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查询权限</Button>
@@ -50,7 +54,7 @@
             </Card>
           </Row>
           <Row>
-            <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata.length"></Input>
+            <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata && allsearchdata.length"></Input>
             <Table :columns="columnsName"
               :data="Testresults"
               highlight-row
@@ -132,7 +136,8 @@
           base: '',
           tablename: '',
           dbcon: '',
-          export_data: false
+          export_data: false,
+          slave_delay: 0
         },
         wordList: [],
         searchkey: '',
@@ -192,6 +197,20 @@
           }
         }
       },
+      GetSlaveDelay () {
+        axios.put(`${util.url}/search`, {'base': this.put_info.base, 'table': this.put_info.tablename, 'dbcon': this.put_info.dbcon, 'delaytime': 1})
+            .then(res => {
+              if (res.data['error']) {
+                util.err_notice(res.data['error'])
+              } else {
+                if (res.data['len'] >= 1) {
+                  this.put_info.slave_delay = res.data['data'][0]['Seconds_Behind_Master']
+                } else {
+                  this.put_info.slave_delay = 0
+                }
+              }
+            })
+      },
       Getbasename (vl) {
         if (vl.length !== 0) {
           this.choseName(vl[0])
@@ -203,7 +222,7 @@
               } else {
                 this.columnsName = res.data['title']
                 this.allsearchdata = res.data['data']
-                this.Testresults = this.allsearchdata.slice(0, this.splice_length)
+                this.debouncedFilterTable()
                 this.total = res.data['len']
               }
             })
@@ -270,6 +289,7 @@
               ])
             }
           })
+          this.GetSlaveDelay()
           axios.post(`${util.url}/search`, {
             'sql': this.formItem.selectContent.length > 2 ? this.formItem.selectContent : this.formItem.textarea,
             'address': JSON.stringify(address)
@@ -278,7 +298,7 @@
                 util.err_notice(res.data)
               } else {
                 this.allsearchdata = res.data['data']
-                this.allsearchdata_filtered = this.allsearchdata
+                this.allsearchdata_filtered = JSON.parse(JSON.stringify(this.allsearchdata))
                 let dataFirst = this.allsearchdata[0]
                 let dataWidth = {}
                 for (let item in dataFirst) {
@@ -297,6 +317,7 @@
                   return item
                 })
                 this.total = res.data['len']
+                this.filtertablekey = ''
               }
               this.$Spin.hide()
             }).catch(error => {
@@ -373,10 +394,13 @@
             })
           }
         })
+    },
+    created () {
       this.debouncedFilter = util._.debounce(this.keyfilter, 500)
       this.debouncedSelect = util._.debounce(this.setSelect, 500)
       this.debouncedFilterTable = util._.debounce(() => {
         this.allsearchdata_filtered = util.tableSearch(this.allsearchdata, this.filtertablekey)
+        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       }, 500)
     },
     watch: {
@@ -389,8 +413,8 @@
       filtertablekey: function () {
         this.debouncedFilterTable()
       },
-      allsearchdata_filtered: function () {
-        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
+      allsearchdata: function () {
+        this.debouncedFilterTable()
       }
     }
   }

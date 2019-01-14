@@ -18,6 +18,7 @@ from .models import (
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
+
 def set_auth_group(user, ddlcon = [], dmlcon = [], querycon = [], **kwargs):
     perm = {
         'ddl': '0',
@@ -42,11 +43,11 @@ def set_auth_group(user, ddlcon = [], dmlcon = [], querycon = [], **kwargs):
             if ddlcon:
                 tmp_ddlcon = set(auth.permissions['ddlcon'])& set(ddlcon)
                 if tmp_ddlcon:
-                    perm['ddlcon'] += list(set(perm['ddlcon'])| tmp_ddlcon)
+                    perm['ddlcon'] = list(set(perm['ddlcon'])| tmp_ddlcon)
                 else:
                     continue
             else:
-                perm['ddlcon'] += auth.permissions['ddlcon']
+                perm['ddlcon'] = list(set(auth.permissions['ddlcon']+ perm['ddlcon']))
 
             if dmlcon:
                 tmp_dmlcon = set(auth.permissions['dmlcon'])& set(dmlcon)
@@ -55,7 +56,7 @@ def set_auth_group(user, ddlcon = [], dmlcon = [], querycon = [], **kwargs):
                 else:
                     continue
             else:
-                perm['dmlcon'] += auth.permissions['dmlcon']
+                perm['dmlcon'] = list(set(auth.permissions['dmlcon']+ perm['dmlcon']))
 
             if querycon:
                 tmp_querycon = set(auth.permissions['querycon'])& set(querycon)
@@ -64,9 +65,8 @@ def set_auth_group(user, ddlcon = [], dmlcon = [], querycon = [], **kwargs):
                 else:
                     continue
             else:
-                perm['querycon'] += auth.permissions['querycon']
-            
-            perm['diccon'] += auth.permissions['diccon']
+                perm['querycon'] = list(set(auth.permissions['querycon']+ perm['querycon']))
+            perm['diccon'] = list(set(auth.permissions['diccon']+ perm['diccon']))
             perm['person'] += auth.permissions['person']
             for k, v in auth.permissions.items():
                 if isinstance(v, str):

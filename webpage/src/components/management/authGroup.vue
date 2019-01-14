@@ -7,7 +7,7 @@
           <Button type="primary" icon="md-people" @click="createModel">添加权限组</Button>
           <br>
           <br/>
-          <Table border :columns="columns" :data="data6_filterd" stripe height="550"></Table>
+          <Table border :columns="columns" :data="data6" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -215,7 +215,7 @@
         isReadOnly: false,
         pagenumber: 1,
         data6: [],
-        data6_filterd: [],
+        data6_origin: [],
         searchkey: '',
         columns: [
           {
@@ -346,8 +346,8 @@
       refreshgroup (vl = 1) {
         axios.get(`${util.url}/authgroup/all?page=${vl}`)
           .then(res => {
-            this.data6 = res.data.data
-            this.data6_filterd = this.data6
+            this.data6_origin = res.data.data
+            this.data6 = JSON.parse(JSON.stringify(this.data6_origin))
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -398,10 +398,7 @@
     },
     watch: {
       searchkey: function () {
-        this.lazy_data6_filter()
-      },
-      data6: function () {
-        this.data6_filterd = util.tableSearch(this.data6, this.searchkey)
+        this.lazy_data6()
       }
     },
     mounted () {
@@ -415,8 +412,10 @@
           util.err_notice(error)
         })
       this.refreshgroup()
-      this.lazy_data6_filter = util._.debounce(() => {
-        this.data6_filterd = util.tableSearch(this.data6, this.searchkey)
+    },
+    created () {
+      this.lazy_data6 = util._.debounce(() => {
+        this.data6 = util.tableSearch(this.data6_origin, this.searchkey)
       }, 500)
     }
   }

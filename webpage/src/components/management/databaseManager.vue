@@ -89,7 +89,7 @@
         </p>
         <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table :columns="columns" :data="rowdata_filterd" height="550"></Table>
+          <Table :columns="columns" :data="rowdata" height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="mountdata" :page-size="10" ref="totol"></Page>
@@ -231,7 +231,7 @@
           }
         ],
         rowdata: [],
-        rowdata_filterd: [],
+        rowdata_origin: [],
         searchkey: '',
         modal: false,
         // 添加数据库信息
@@ -510,8 +510,8 @@
       mountdata (vl = 1) {
         axios.get(`${util.url}/management_db/all/?page=${vl}&permissions_type=base`)
           .then(res => {
-            this.rowdata = res.data.data
-            this.rowdata_filterd = this.rowdata
+            this.rowdata_origin = res.data.data
+            this.rowdata = JSON.parse(JSON.stringify(this.rowdata_origin))
             this.pagenumber = parseInt(res.data.page)
             this.diclist = res.data.diclist
             this.dataset = res.data['custom']
@@ -557,16 +557,15 @@
     },
     watch: {
       searchkey: function () {
-        this.lazy_rowdata_filterd()
-      },
-      rowdata: function () {
-        this.rowdata_filterd = util.tableSearch(this.rowdata, this.searchkey)
+        this.lazy_rowdata()
       }
     },
     mounted () {
       this.mountdata()
-      this.lazy_rowdata_filterd = util._.debounce(() => {
-        this.rowdata_filterd = util.tableSearch(this.rowdata, this.searchkey)
+    },
+    created () {
+      this.lazy_rowdata = util._.debounce(() => {
+        this.rowdata = util.tableSearch(this.rowdata, this.searchkey)
       }, 500)
     }
   }

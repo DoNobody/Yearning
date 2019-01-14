@@ -13,7 +13,7 @@
         <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <Row>
           <Col span="24">
-            <Table border :columns="tabcolumns" :data="TableDataNewFilterd" class="tabletop"
+            <Table border :columns="tabcolumns" :data="TableDataNew" class="tabletop"
                    style="background: #5cadff"></Table>
             <br>
             <Page :total="this.pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="page"></Page>
@@ -94,7 +94,7 @@
           }
         ],
         TableDataNew: [],
-        TableDataNewFilterd: [],
+        TableDataNewOrigin: [],
         pagenumber: 1,
         searchkey: ''
       }
@@ -116,16 +116,15 @@
     },
     watch: {
       searchkey: function () {
-        this.lazyTableDataNewFilter()
-      },
-      TableDataNew: function () {
-        this.TableDataNewFilterd = util.tableSearch(this.TableDataNew, this.searchkey)
+        this.lazyTableDataNew()
       }
     },
     mounted () {
       this.getrecordinfo()
-      this.lazyTableDataNewFilter = util._.debounce(() => {
-        this.TableDataNewFilterd = util.tableSearch(this.TableDataNew, this.searchkey)
+    },
+    created () {
+      this.lazyTableDataNew = util._.debounce(() => {
+        this.TableDataNew = util.tableSearch(this.TableDataNewOrigin, this.searchkey)
       }, 500)
     }
   }
