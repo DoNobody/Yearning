@@ -56,7 +56,7 @@
           <Row>
             <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata && allsearchdata.length"></Input>
             <Table :columns="columnsName"
-              :data="Testresults"
+              :data="allsearchdata|debouncedFilterTable(filtertablekeyLazy, page, splice_length)"
               highlight-row
               ref="table"
               stripe
@@ -120,7 +120,6 @@
         },
         tmpGetselect: '',
         columnsName: [],
-        Testresults: [],
         ruleValidate: {
           basename: [{
             required: true,
@@ -131,7 +130,6 @@
         id: null,
         total: 0,
         allsearchdata: [],
-        allsearchdata_filtered: [],
         put_info: {
           base: '',
           tablename: '',
@@ -143,7 +141,8 @@
         searchkey: '',
         splice_length: 10,
         page: 1,
-        filtertablekey: ''
+        filtertablekey: '',
+        filtertablekeyLazy: ''
       }
     },
     methods: {
@@ -222,14 +221,12 @@
               } else {
                 this.columnsName = res.data['title']
                 this.allsearchdata = res.data['data']
-                this.debouncedFilterTable()
                 this.total = res.data['len']
               }
             })
           } else {
             this.columnsName = []
             this.allsearchdata = []
-            this.Testresults = []
             this.total = 0
           }
         }
@@ -252,16 +249,13 @@
       },
       splice_arr (page) {
         this.page = page
-        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       },
       splice_len (length) {
         this.splice_length = length
-        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
       },
       ClearForm () {
         this.formItem.textarea = ''
         this.formItem.selectContent = ''
-        this.Testresults = []
         this.columnsName = []
         this.$refs.totol.currentPage = 1
         this.total = 0
@@ -367,7 +361,6 @@
         } else {
           this.formItem.selectContent = ''
         }
-        console.log(this.formItem.selectContent)
       }
     },
     mounted () {
@@ -398,9 +391,8 @@
     created () {
       this.debouncedFilter = util._.debounce(this.keyfilter, 500)
       this.debouncedSelect = util._.debounce(this.setSelect, 500)
-      this.debouncedFilterTable = util._.debounce(() => {
-        this.allsearchdata_filtered = util.tableSearch(this.allsearchdata, this.filtertablekey)
-        this.Testresults = this.allsearchdata_filtered.slice((this.page - 1) * this.splice_length, this.page * this.splice_length)
+      this.debouncedSearchKey = util._.debounce(() => {
+        this.filtertablekeyLazy = this.filtertablekey
       }, 500)
     },
     watch: {
@@ -411,10 +403,12 @@
         this.debouncedSelect()
       },
       filtertablekey: function () {
-        this.debouncedFilterTable()
-      },
-      allsearchdata: function () {
-        this.debouncedFilterTable()
+        this.debouncedSearchKey()
+      }
+    },
+    filters: {
+      debouncedFilterTable: function (val, filtertablekey, page, spliceLength) {
+        return util.tableSearch(val, filtertablekey).slice((page - 1) * spliceLength, page * spliceLength)
       }
     }
   }

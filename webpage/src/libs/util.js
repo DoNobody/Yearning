@@ -131,18 +131,18 @@ util.filternode = function (node, key) {
 }
 
 util.tableSearch = function (source, searchkey) {
-  let result = JSON.parse(JSON.stringify(source))
   if (searchkey.length !== 0) {
-      result = source.filter((v) => {
-      for (let item of Object.values(v)) {
-        if (item && item.toString().indexOf(searchkey) !== -1) {
-          return true
+      return source.filter((v) => {
+        for (let item of Object.values(v)) {
+          if (item && item.toString().toLowerCase().indexOf(searchkey.toLowerCase()) !== -1) {
+            return true
+          }
         }
-      }
-      return false
-    })
+        return false
+      })
+  } else {
+    return source
   }
-  return result
 }
 
 util._ = _
