@@ -43,6 +43,7 @@ class audit(baseview.BaseView):
         try:
             page = request.GET.get('page')
             username = request.user.username
+            request_name = request.GET.get('username', '')
         except KeyError as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
             return HttpResponse(status=500)
@@ -51,26 +52,48 @@ class audit(baseview.BaseView):
                 un_init = util.init_conf()
                 custom_com = ast.literal_eval(un_init['other'])
                 if request.user.group == 'admin':
-                    page_sql = Q()
-                    raw_sql = '''
-                        select core_sqlorder.*,core_databaselist.connection_name, \
-                        core_databaselist.computer_room from core_sqlorder,core_databaselist
-                        where core_sqlorder.bundle_id = core_databaselist.id and \
-                        core_sqlorder.delete_yn = 1 
-                        ORDER BY core_sqlorder.id desc
-                        '''
-                else:
-                    page_sql = Q(assigned=username)|Q(username=username)|Q(exceuser=username)
-                    raw_sql = '''
+                    if request_name:
+                        page_sql = Q(username=username)&Q(delete_yn=1)
+                        raw_sql = '''
+                                select core_sqlorder.*,core_databaselist.connection_name, \
+                                core_databaselist.computer_room from core_sqlorder,core_databaselist
+                                where core_sqlorder.bundle_id = core_databaselist.id and \
+                                core_sqlorder.delete_yn = 1 and \
+                                core_sqlorder.username = '%s' \
+                                ORDER BY core_sqlorder.id desc
+                                ''' % (username)
+                    else:
+                        page_sql = Q(delete_yn=1)
+                        raw_sql = '''
                             select core_sqlorder.*,core_databaselist.connection_name, \
                             core_databaselist.computer_room from core_sqlorder,core_databaselist
                             where core_sqlorder.bundle_id = core_databaselist.id and \
-                            core_sqlorder.delete_yn = 1 and \
-                            (core_sqlorder.assigned = '%s' or \
-                            core_sqlorder.username = '%s' or \
-                            core_sqlorder.exceuser = '%s') \
+                            core_sqlorder.delete_yn = 1 \
                             ORDER BY core_sqlorder.id desc
-                            ''' % (username, username, username)
+                            '''
+                else:
+                    if request_name:
+                        page_sql = Q(username=username)&Q(delete_yn=1)
+                        raw_sql = '''
+                                select core_sqlorder.*,core_databaselist.connection_name, \
+                                core_databaselist.computer_room from core_sqlorder,core_databaselist
+                                where core_sqlorder.bundle_id = core_databaselist.id and \
+                                core_sqlorder.delete_yn = 1 and \
+                                core_sqlorder.username = '%s' \
+                                ORDER BY core_sqlorder.id desc
+                                ''' % (username)
+                    else:
+                        page_sql = (Q(assigned=username)|Q(username=username)|Q(exceuser=username))&Q(delete_yn=1)
+                        raw_sql = '''
+                                select core_sqlorder.*,core_databaselist.connection_name, \
+                                core_databaselist.computer_room from core_sqlorder,core_databaselist
+                                where core_sqlorder.bundle_id = core_databaselist.id and \
+                                core_sqlorder.delete_yn = 1 and \
+                                (core_sqlorder.assigned = '%s' or \
+                                core_sqlorder.username = '%s' or \
+                                core_sqlorder.exceuser = '%s') \
+                                ORDER BY core_sqlorder.id desc
+                                ''' % (username, username, username)
                 page_number = SqlOrder.objects.filter(page_sql).count()
                 start = (int(page) - 1) * 20
                 end = int(page) * 20

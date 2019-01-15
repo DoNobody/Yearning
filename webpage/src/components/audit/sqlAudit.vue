@@ -62,7 +62,7 @@
               </Poptip>
               <Button type="success" @click.native="mou_data()">刷新</Button>
             </template>
-            <Table border :columns="columns6" :data="tmp" stripe ref="selection"
+            <Table border :columns="columns6" :data="orders|filterOrders(searchkeyLazy)" stripe ref="selection"
                    @on-selection-change="delrecordList"></Table>
             <br>
             <Page :total="pagenumber" show-elevator @on-change="mou_data" :page-size="20" ref="page"></Page>
@@ -102,7 +102,7 @@
             <Table :columns="columnsName" :data="dataId" stripe border height="200"></Table>
           </template>
         </FormItem>
-        <FormItem label="选择执行人:" v-if="multi ">
+        <FormItem label="选择执行人:" v-if="multi && auth !== 'perform'">
           <Select v-model="multi_name" style="width: 20%" clearable v-if="formitem.status !== 1">
             <Option v-for="i in multi_list" :value="i.username" :key="i.username">{{ i.auth_group? i.auth_group+'->'+i.username: i.username }}</Option>
           </Select>
@@ -114,7 +114,7 @@
       <div slot="footer">
         <Button @click="modal2 = false">取消</Button>
         <template v-if="formitem.status === 2">
-          <template v-if="auth === 'admin' || auth === 'manager'">
+          <template v-if="auth === 'admin'|| auth === 'manager'">
             <Button type="warning" @click.native="test_button()" >检测sql</Button>
             <Button type="error" @click="out_button()" :disabled="summit">驳回</Button>
             <template v-if="multi && multi_name">
@@ -124,13 +124,15 @@
               <Button type="success" @click="put_button()" :disabled="summit">执行</Button>
             </template>
           </template>
+          <template v-else>
+            <Button type="error" @click="out_button()">撤回</Button>
+          </template>
         </template>
         <template v-else-if="formitem.status === 1">
           <Button type="warning" @click.native="test_button()" >检测sql</Button>
           <Button type="error" @click="out_button()" :disabled="summit">拒绝</Button>
           <Button type="success" @click="put_button()" :disabled="summit">执行</Button>
         </template>
-
       </div>
     </Modal>
 
@@ -450,8 +452,7 @@
           reje: false,
           textarea: ''
         },
-        tmp: [],
-        tmp_origin: [],
+        orders: [],
         pagenumber: 1,
         delrecord: [],
         togoing: null,
@@ -467,18 +468,19 @@
         multi_list: {},
         multi_name: '',
         reboot: null,
-        searchkey: ''
+        searchkey: '',
+        searchkeyLazy: ''
       }
     },
     methods: {
       edit_tab: function (index) {
+        let filterTable = util.tableSearch(this.orders, this.searchkeyLazy)
         this.sql = []
         this.togoing = index
         this.dataId = []
         this.modal2 = true
-        this.formitem = this.tmp[index]
-        this.tmp[index].status
-        let tmpSql = this.tmp[index].sql.split(';')
+        this.formitem = filterTable[index]
+        let tmpSql = filterTable[index].sql.split(';')
         for (let i of tmpSql) {
           this.sql.push({'sql': i})
         }
@@ -503,8 +505,9 @@
         }
       },
       put_button () {
+        let filterTable = util.tableSearch(this.orders, this.searchkeyLazy)
         this.modal2 = false
-        this.tmp[this.togoing].status = 3
+        filterTable[this.togoing].status = 3
         axios.put(`${util.url}/audit_sql`, {
           'status': 3,
           'from_user': sessionStorage.getItem('user'),
@@ -567,11 +570,16 @@
           })
       },
       mou_data (vl = 1) {
-        axios.get(`${util.url}/audit_sql?page=${vl}&username=${sessionStorage.getItem('user')}`)
+        let tmpUrl = ''
+        if (this.$route.name === 'myorder') {
+          tmpUrl = `${util.url}/audit_sql?page=${vl}&username=${sessionStorage.getItem('user')}`
+        } else {
+          tmpUrl = `${util.url}/audit_sql?page=${vl}`
+        }
+        axios.get(tmpUrl)
           .then(res => {
-            this.tmp_origin = res.data.data
-            this.tmp_origin.forEach((item) => { (item.backup === 1) ? item.backup = '是' : item.backup = '否' })
-            this.tmp = JSON.parse(JSON.stringify(this.tmp_origin))
+            this.orders = res.data.data
+            this.orders.forEach((item) => { (item.backup === 1) ? item.backup = '是' : item.backup = '否' })
             this.pagenumber = res.data.page
             this.multi = res.data.multi
             this.multi_list = res.data.multi_list
@@ -637,8 +645,13 @@
     },
     created () {
       this.lazysearchtmp = util._.debounce(() => {
-        this.tmp = util.tableSearch(this.tmp_origin, this.searchkey)
+        this.searchkeyLazy = this.searchkey
       }, 500)
+    },
+    filters: {
+      filterOrders: function (val, searchkeyLazy) {
+        return util.tableSearch(val, searchkeyLazy)
+      }
     },
     destroyed () {
       clearInterval(this.reboot)
