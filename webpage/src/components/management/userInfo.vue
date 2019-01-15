@@ -55,7 +55,7 @@
         </p>
         <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table border :columns="columns6" :data="data5" stripe height="550"></Table>
+          <Table border :columns="columns6" :data="data5|tablefilter(searchkeyLazy)" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -358,8 +358,8 @@
           }
         ],
         data5: [],
-        data5_origin: [],
         searchkey: '',
+        searchkeyLazy: '',
         pagenumber: 1,
         // 新建用户
         userinfo: {
@@ -582,27 +582,31 @@
         this.groupDisabled = parseInt(sessionStorage.getItem('access')) !== 3
       },
       edituser (index) {
+        let filterData5 = util.tableSearch(this.data5, this.searchkeyLazy)
         this.editPasswordModal = true
-        this.username = this.data5[index].username
+        this.username = filterData5[index].username
       },
       editauth (index) {
+        let filterData5 = util.tableSearch(this.data5, this.searchkeyLazy)
         this.editAuthModal = true
-        this.editAuthForm = this.data5[index]
-        if (this.data5[index].auth_group !== null) {
-          this.editAuthForm.authgroup = this.data5[index].auth_group.split(',')
+        this.editAuthForm = filterData5[index]
+        if (filterData5[index].auth_group !== null) {
+          this.editAuthForm.authgroup = filterData5[index].auth_group.split(',')
         } else {
           this.editAuthForm.authgroup = []
         }
       },
       deleteUser (index) {
+        let filterData5 = util.tableSearch(this.data5, this.searchkeyLazy)
         this.deluserModal = true
-        this.username = this.data5[index].username
+        this.username = filterData5[index].username
       },
       editEmail (index) {
+        let filterData5 = util.tableSearch(this.data5, this.searchkeyLazy)
         this.editemail = true
-        this.username = this.data5[index].username
-        this.email = this.data5[index].email
-        this.real_name = this.data5[index].real_name
+        this.username = filterData5[index].username
+        this.email = filterData5[index].email
+        this.real_name = filterData5[index].real_name
       },
       putemail () {
         axios.put(`${util.url}/userinfo/changemail`, {
@@ -659,8 +663,7 @@
       refreshuser (vl = 1) {
         axios.get(`${util.url}/userinfo/all?page=${vl}`)
           .then(res => {
-            this.data5_origin = res.data.data
-            this.data5 = JSON.parse(JSON.stringify(this.data5_origin))
+            this.data5 = res.data.data
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -747,8 +750,13 @@
     },
     created () {
       this.lazy_data5 = util._.debounce(() => {
-        this.data5 = util.tableSearch(this.data5_origin, this.searchkey)
+        this.searchkeyLazy = this.searchkey
       }, 500)
+    },
+    filters: {
+      tablefilter: function (val, searchkeyLazy) {
+        return util.tableSearch(val, searchkeyLazy)
+      }
     }
   }
 </script>

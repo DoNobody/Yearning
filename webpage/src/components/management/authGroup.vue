@@ -7,7 +7,7 @@
           <Button type="primary" icon="md-people" @click="createModel">添加权限组</Button>
           <br>
           <br/>
-          <Table border :columns="columns" :data="data6" stripe height="550"></Table>
+          <Table border :columns="columns" :data="data6|tablefilter(searchkeyLazy)" stripe height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="splicpage" :page-size="10" ref="total"></Page>
@@ -215,8 +215,8 @@
         isReadOnly: false,
         pagenumber: 1,
         data6: [],
-        data6_origin: [],
         searchkey: '',
+        searchkeyLazy: '',
         columns: [
           {
             title: 'ID',
@@ -346,8 +346,7 @@
       refreshgroup (vl = 1) {
         axios.get(`${util.url}/authgroup/all?page=${vl}`)
           .then(res => {
-            this.data6_origin = res.data.data
-            this.data6 = JSON.parse(JSON.stringify(this.data6_origin))
+            this.data6 = res.data.data
             this.pagenumber = parseInt(res.data.page)
           })
           .catch(error => {
@@ -415,8 +414,13 @@
     },
     created () {
       this.lazy_data6 = util._.debounce(() => {
-        this.data6 = util.tableSearch(this.data6_origin, this.searchkey)
+        this.searchkeyLazy = this.searchkey
       }, 500)
+    },
+    filters: {
+      tablefilter: function (val, searchkeyLazy) {
+        return util.tableSearch(val, searchkeyLazy)
+      }
     }
   }
 </script>

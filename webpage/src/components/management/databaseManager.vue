@@ -89,7 +89,7 @@
         </p>
         <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
         <div class="edittable-con-1">
-          <Table :columns="columns" :data="rowdata" height="550"></Table>
+          <Table :columns="columns" :data="rowdata|tablefilter(searchkeyLazy)" height="550"></Table>
         </div>
         <br>
         <Page :total="pagenumber" show-elevator @on-change="mountdata" :page-size="10" ref="totol"></Page>
@@ -231,8 +231,8 @@
           }
         ],
         rowdata: [],
-        rowdata_origin: [],
         searchkey: '',
+        searchkeyLazy: '',
         modal: false,
         // 添加数据库信息
         formItem: {
@@ -356,13 +356,15 @@
         })
       },
       edit_tab (index) {
+        let filterTable = util.tableSearch(this.rowdata, this.searchkeyLazy)
         this.baseinfo = true
-        this.editbaseinfo = this.rowdata[index]
+        this.editbaseinfo = filterTable[index]
       },
       // 删除数据库
       deldatabases (index) {
+        let filterTable = util.tableSearch(this.rowdata, this.searchkeyLazy)
         this.delbaseModal = true
-        this.delbasename = this.rowdata[index].connection_name
+        this.delbasename = filterTable[index].connection_name
       },
       // 删除数据库字典
       Deletedic () {
@@ -510,8 +512,7 @@
       mountdata (vl = 1) {
         axios.get(`${util.url}/management_db/all/?page=${vl}&permissions_type=base`)
           .then(res => {
-            this.rowdata_origin = res.data.data
-            this.rowdata = JSON.parse(JSON.stringify(this.rowdata_origin))
+            this.rowdata = res.data.data
             this.pagenumber = parseInt(res.data.page)
             this.diclist = res.data.diclist
             this.dataset = res.data['custom']
@@ -565,8 +566,13 @@
     },
     created () {
       this.lazy_rowdata = util._.debounce(() => {
-        this.rowdata = util.tableSearch(this.rowdata, this.searchkey)
+        this.searchkeyLazy = this.searchkey
       }, 500)
+    },
+    filters: {
+      tablefilter: function (val, searchkeyLazy) {
+        return util.tableSearch(val, searchkeyLazy)
+      }
     }
   }
 </script>
