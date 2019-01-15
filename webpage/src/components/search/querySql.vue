@@ -164,35 +164,28 @@
         this.put_info.base = ''
         this.put_info.dbcon = ''
         this.put_info.tablename = ''
-        // 使用抛出异常快速退出
-        try {
-          for (let c of this.data1) {
-            if (this.matchNode(c, vl)) {
-              this.put_info.dbcon = c.title
-              this.put_info.export_data = c.export
-              throw Error('custom_return')
-            }
-            for (let i of c.children) {
-              if (this.matchNode(i, vl)) {
-                this.put_info.dbcon = c.title
-                this.put_info.base = i.title
-                this.put_info.export_data = c.export
-                throw Error('custom_return')
-              }
-              for (let t of i.children) {
-                if (this.matchNode(t, vl)) {
-                  this.put_info.base = i.title
-                  this.put_info.dbcon = c.title
-                  this.put_info.tablename = t.title
-                  this.put_info.export_data = c.export
-                  throw Error('custom_return')
-                }
-              }
-            }
+        for (let c of this.data1) {
+          if (this.matchNode(c, vl)) {
+            this.put_info.dbcon = c.title
+            this.put_info.export_data = c.export
+            return ''
           }
-        } catch (e) {
-          if (e.message !== 'custom_return') {
-            throw e
+          for (let i of c.children) {
+            if (this.matchNode(i, vl)) {
+              this.put_info.dbcon = c.title
+              this.put_info.base = i.title
+              this.put_info.export_data = c.export
+              return ''
+            }
+            for (let t of i.children) {
+              if (this.matchNode(t, vl)) {
+                this.put_info.base = i.title
+                this.put_info.dbcon = c.title
+                this.put_info.tablename = t.title
+                this.put_info.export_data = c.export
+                return ''
+              }
+            }
           }
         }
       },
