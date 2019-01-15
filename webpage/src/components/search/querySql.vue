@@ -200,7 +200,7 @@
         axios.put(`${util.url}/search`, {'base': this.put_info.base, 'table': this.put_info.tablename, 'dbcon': this.put_info.dbcon, 'delaytime': 1})
             .then(res => {
               if (res.data['error']) {
-                util.err_notice(res.data['error'])
+                util.err_notice('获取延时信息失败:' + res.data['error'])
               } else {
                 if (res.data['len'] >= 1) {
                   this.put_info.slave_delay = res.data['data'][0]['Seconds_Behind_Master']
