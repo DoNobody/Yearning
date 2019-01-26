@@ -50,10 +50,12 @@ class search(baseview.BaseView):
         address = json.loads(request.data['address'])
         check = str(sql).strip().split(';\n')
         user = query_order.objects.filter(username=request.user, connection_name=address['dbcon'], query_per=1).first()
+        gperm = globalpermissions.objects.filter(authorization='global').first()
+        sql_first_key_list = [ i.upper() for i in gperm.other.get('query_keywd_list', [])] + ['SELECT']
         un_init = util.init_conf()
         custom_com = ast.literal_eval(un_init['other'])
         if user:
-            if check[-1].strip().lower().startswith('s') != 1:
+            if not all([checkStartK(item, sql_first_key_list) for item in check[-1].strip().split(';') if item]):
                 return Response('只支持查询功能或删除不必要的空白行！')
             else:
                 _c = DatabaseList.objects.filter(
@@ -126,6 +128,10 @@ class search(baseview.BaseView):
             return Response({'error': '非法请求,账号无查询权限！'})
 
 
+def checkStartK(item, setK):
+    return str(item).split('\n')[0].split(' ')[0].upper() in setK
+
+
 def replace_limit(sql, limit):
     '''
 
@@ -135,7 +141,13 @@ def replace_limit(sql, limit):
 
     if sql[-1] != ';':
         sql += ';'
-    if sql.startswith('show') == -1:
+    gperm = globalpermissions.objects.filter(authorization='global').first()
+    sql_first_key_list = [ i.upper() for i in gperm.other.get('query_keywd_list', [])]
+    CUSTOM_ERROR.error(sql_first_key_list)
+    CUSTOM_ERROR.error(str(sql.split(';')))
+    CUSTOM_ERROR.error(str(checkStartK(sql, sql_first_key_list)))
+
+    if all([checkStartK(item, sql_first_key_list) for item in sql.split(';') if item]):
         return sql
     sql_re = re.search(r'limit\s.*\d.*;', sql.lower())
     length = ''

@@ -183,6 +183,14 @@
                     <Input placeholder="脱敏字段设置" v-model="other.sensitive" style="width: 30%"></Input>
                     <Button icon="ios-plus-empty" type="dashed" size="small" @click="handleAdd1">添加脱敏字段</Button>
                   </FormItem>
+                  <FormItem label="查询功能允许操作:">
+                    <Tag v-for="v in other.query_keywd_list" :key="v" :name="v" type="border" closable color="blue"
+                         @on-close="handleClose4">{{ v }}
+                    </Tag>
+                    <br>
+                    <Input placeholder="默认SELECT,请勿重复" v-model="other.query_keywd" style="width: 30%"></Input>
+                    <Button icon="ios-plus-empty" type="dashed" size="small" @click="handleAddQkey">添加允许关键字</Button>
+                  </FormItem>
                   <Form-item label="多级审核开关:">
                     <i-switch size="large" @on-change="multi_switching" v-model="other.multi">
                       <span slot="open">开</span>
@@ -263,6 +271,8 @@
         },
         other: {
           sensitive_list: [],
+          query_keywd_list: [],
+          query_keywd: '',
           limit: '',
           con_room: [],
           foce: '',
@@ -286,6 +296,10 @@
         this.other.sensitive_list.push(this.other.sensitive)
         this.other.sensitive = ''
       },
+      handleAddQkey () {
+        this.other.query_keywd_list.push(this.other.query_keywd)
+        this.other.query_keywd = ''
+      },
       handleAdd_exclued_db () {
         this.other.exclued_db_list.push(this.other.exclued_db)
         this.other.exclued_db = ''
@@ -301,6 +315,10 @@
       handleClose3 (event, name) {
         const index = this.other.sensitive_list.indexOf(name)
         this.other.sensitive_list.splice(index, 1)
+      },
+      handleClose4 (event, name) {
+        const index = this.other.query_keywd_list.indexOf(name)
+        this.other.query_keywd_list.splice(index, 1)
       },
       handleClose_exclued_db (event, name) {
         const index = this.other.exclued_db_list.indexOf(name)
@@ -378,11 +396,11 @@
               name: 'error_401'
             })
           } else {
-            this.message = res.data.message
+            this.message = Object.assign(this.message, res.data.message)
             this.message.mail ? this.message.mail = true : this.message.mail = false
             this.message.ding ? this.message.ding = true : this.message.ding = false
-            this.inception = res.data.inception
-            this.other = res.data.other
+            this.inception = Object.assign(this.inception, res.data.inception)
+            this.other = Object.assign(this.other, res.data.other)
             this.other.multi ? this.other.multi = true : this.other.multi = false
             this.other.query ? this.other.query = true : this.other.query = false
             this.ldap = res.data.ldap
