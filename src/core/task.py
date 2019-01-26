@@ -67,7 +67,7 @@ def set_auth_group(user, ddlcon = [], dmlcon = [], querycon = [], **kwargs):
             else:
                 perm['querycon'] = list(set(auth.permissions['querycon']+ perm['querycon']))
             perm['diccon'] = list(set(auth.permissions['diccon']+ perm['diccon']))
-            perm['person'] += auth.permissions['person']
+            perm['person'] = list(set(auth.permissions['person']+ perm['person']))
             for k, v in auth.permissions.items():
                 if isinstance(v, str):
                     if int(perm[k]) or int(v):

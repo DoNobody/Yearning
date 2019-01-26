@@ -296,7 +296,7 @@ class query_worklf(baseview.BaseView):
 
         elif request.data['mode'] == 'info':
             data = []
-            highlist = []
+            highlist = {}
             databaseSet = query_order.objects.filter(username=request.user, query_per=1).all()
             for dbcon in databaseSet:
                 tablelist = []
@@ -319,10 +319,10 @@ class query_worklf(baseview.BaseView):
                                             port=_connection.port,
                                             db=i['Database']) as f:
                         tablename = f.query_info(sql='show tables')
-                    highlist.append({'vl': i['Database'], 'meta': '库名'})
+                    highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
                     for c in tablename:
                         key = 'Tables_in_%s' % i['Database']
-                        highlist.append({'vl': c[key], 'meta': '表名'})
+                        highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
                         children.append({
                             'title': c[key]
                         })

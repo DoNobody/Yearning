@@ -138,6 +138,8 @@
           slave_delay: 0
         },
         wordList: [],
+        wordList_origin: [],
+        db_keyword: {},
         searchkey: '',
         splice_length: 10,
         page: 1,
@@ -174,6 +176,7 @@
             if (this.matchNode(i, vl)) {
               this.put_info.dbcon = c.title
               this.put_info.base = i.title
+              this.wordList = this.wordList_origin.concat(this.db_keyword[i.title])
               this.put_info.export_data = c.export
               return ''
             }
@@ -183,6 +186,7 @@
                 this.put_info.dbcon = c.title
                 this.put_info.tablename = t.title
                 this.put_info.export_data = c.export
+                this.wordList = this.wordList_origin.concat(this.db_keyword[i.title])
                 return ''
               }
             }
@@ -370,9 +374,10 @@
                 this.data2 = JSON.parse(res.data['info'])
                 let tWord = util.highlight.split('|')
                 for (let i of tWord) {
-                  this.wordList.push({'vl': i, 'meta': '关键字'})
+                  this.wordList_origin.push({'vl': i, 'meta': '关键字'})
                 }
-                this.wordList = this.wordList.concat(res.data.highlight)
+                this.wordList = JSON.parse(JSON.stringify(this.wordList_origin))
+                this.db_keyword = res.data.highlight
               })
           } else {
             this.$router.push({
