@@ -10,12 +10,16 @@ RUN  pip3 install -r /opt/Yearning/src/requirements.txt \
 COPY src /opt/Yearning/src
 
 WORKDIR /opt/Yearning/src 
-COPY install/start_yearning.sh ./start_yearning.sh
-RUN mv deploy.conf.template deploy.conf \
-		&& chmod 755 ./start_yearning.sh
+RUN mv deploy.conf.template deploy.conf
+
+COPY install/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod 0755 ./docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+
 
 EXPOSE 8000
 
 STOPSIGNAL SIGTERM
 
-CMD ["./start_yearning.sh"]
+CMD [ "gunicorn","-c","gunicorn.conf", "settingConf.wsgi:application" ]

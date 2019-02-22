@@ -122,11 +122,12 @@ JWT_AUTH = {
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'standard': {
-            'format': '%(asctime)s [%(threadName)s:%(thread)d] ' + \
-            '[%(name)s:%(lineno)d] [%(levelname)s]- %(message)s'}
+            'format': '%(asctime)s [%(name)s:%(thread)d] ' + \
+            '[%(filename)s:%(lineno)d] [%(levelname)s]- %(message)s'
+        }
         # 日志格式
     },
     'filters': {
@@ -155,14 +156,9 @@ LOGGING = {
         }
     },
     'loggers': {
-        'django': {
-            'handlers': ['default', 'console'],
-            'level': 'INFO',
-            'propagate': False
-        },
         'Yearning.core.views': {
             'handlers': ['error', 'console'],
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True
         }
 

@@ -143,9 +143,6 @@ def replace_limit(sql, limit):
         sql += ';'
     gperm = globalpermissions.objects.filter(authorization='global').first()
     sql_first_key_list = [ i.upper() for i in gperm.other.get('query_keywd_list', [])]
-    CUSTOM_ERROR.error(sql_first_key_list)
-    CUSTOM_ERROR.error(str(sql.split(';')))
-    CUSTOM_ERROR.error(str(checkStartK(sql, sql_first_key_list)))
 
     if all([checkStartK(item, sql_first_key_list) for item in sql.split(';') if item]):
         return sql
