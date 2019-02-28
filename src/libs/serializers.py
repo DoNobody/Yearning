@@ -91,7 +91,7 @@ class Getdingding(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'before', 'after')
 
 
-class Recordinfo(serializers.HyperlinkedModelSerializer):
+class SqlOrderSerializer(serializers.ModelSerializer):
     '''
 
     执行记录 返回
@@ -100,7 +100,7 @@ class Recordinfo(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = SqlOrder
-        fields = ('workid', 'username', 'text', 'data', 'basename', 'assigned')
+        fields = '__all__'
 
 
 class Query_review(serializers.HyperlinkedModelSerializer):

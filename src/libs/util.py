@@ -15,14 +15,16 @@ import json
 import random
 import ssl
 import time
+import pytz
+from datetime import datetime
 import ldap3
 from ldap3 import Connection, SUBTREE
 import configparser
 import ast
+from django.conf import settings
 
 _conf = configparser.ConfigParser()
 _conf.read('deploy.conf')
-
 
 def dingding(content: str = None, url: str = None):
     '''
@@ -43,7 +45,7 @@ def date() -> str:
     '''
     datetime
     '''
-    now = time.strftime('%Y-%m-%d %H:%M', time.localtime(time.time()))
+    now = datetime.now(pytz.timezone(settings.TIME_ZONE)).strftime('%Y-%m-%d %H:%M')
     return now
 
 
@@ -51,7 +53,7 @@ def workId() -> str:
     '''
     工单
     '''
-    now = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
+    now = datetime.now(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M%S')
     _ran = ''.join(random.sample('0123456789', 4))
 
     now = f'{now}{_ran}'

@@ -14,6 +14,7 @@ from core.models import (
     Q
 )
 
+from django.core.paginator import Paginator
 from core.task import order_push_message, rejected_push_messages
 
 conf = util.conf_path()
@@ -41,7 +42,7 @@ class audit(baseview.BaseView):
         '''
 
         try:
-            page = request.GET.get('page')
+            page = int(request.GET.get('page'))
             username = request.user.username
             request_name = request.GET.get('username', '')
         except KeyError as e:
@@ -51,58 +52,36 @@ class audit(baseview.BaseView):
             try:
                 un_init = util.init_conf()
                 custom_com = ast.literal_eval(un_init['other'])
+                conn_info = DatabaseList.objects.filter().all()
+                conn_id_name = [{'id':con.id, 'connection_name':con.connection_name, 'computer_room':con.computer_room} for con in conn_info ]
                 if request.user.group == 'admin':
                     if request_name:
                         page_sql = Q(username=username)&Q(delete_yn=1)
-                        raw_sql = '''
-                                select core_sqlorder.*,core_databaselist.connection_name, \
-                                core_databaselist.computer_room from core_sqlorder,core_databaselist
-                                where core_sqlorder.bundle_id = core_databaselist.id and \
-                                core_sqlorder.delete_yn = 1 and \
-                                core_sqlorder.username = '%s' \
-                                ORDER BY core_sqlorder.id desc
-                                ''' % (username)
                     else:
                         page_sql = Q(delete_yn=1)
-                        raw_sql = '''
-                            select core_sqlorder.*,core_databaselist.connection_name, \
-                            core_databaselist.computer_room from core_sqlorder,core_databaselist
-                            where core_sqlorder.bundle_id = core_databaselist.id and \
-                            core_sqlorder.delete_yn = 1 \
-                            ORDER BY core_sqlorder.id desc
-                            '''
                 else:
                     if request_name:
                         page_sql = Q(username=username)&Q(delete_yn=1)
-                        raw_sql = '''
-                                select core_sqlorder.*,core_databaselist.connection_name, \
-                                core_databaselist.computer_room from core_sqlorder,core_databaselist
-                                where core_sqlorder.bundle_id = core_databaselist.id and \
-                                core_sqlorder.delete_yn = 1 and \
-                                core_sqlorder.username = '%s' \
-                                ORDER BY core_sqlorder.id desc
-                                ''' % (username)
                     else:
                         page_sql = (Q(assigned=username)|Q(username=username)|Q(exceuser=username))&Q(delete_yn=1)
-                        raw_sql = '''
-                                select core_sqlorder.*,core_databaselist.connection_name, \
-                                core_databaselist.computer_room from core_sqlorder,core_databaselist
-                                where core_sqlorder.bundle_id = core_databaselist.id and \
-                                core_sqlorder.delete_yn = 1 and \
-                                (core_sqlorder.assigned = '%s' or \
-                                core_sqlorder.username = '%s' or \
-                                core_sqlorder.exceuser = '%s') \
-                                ORDER BY core_sqlorder.id desc
-                                ''' % (username, username, username)
-                page_number = SqlOrder.objects.filter(page_sql).count()
-                start = (int(page) - 1) * 20
-                end = int(page) * 20
-                info = SqlOrder.objects.raw(raw_sql)[start:end]
-                data = util.ser(info)
+                all_data = SqlOrder.objects.filter(page_sql).order_by('-id').all()
+                count = len(all_data)
+                start = max(0, (page - 1 ) * 20)
+                end = min(count, page * 20)
+                page_data = all_data[start:end]
+                data = []
+                for recd in page_data:
+                    tmp_result = {}
+                    tmp_data = serializers.SqlOrderSerializer(recd)
+                    tmp_result = dict(tmp_data.data) 
+                    info = [{'connection_name':con['connection_name'], 'computer_room':con['computer_room']} for con in conn_id_name if con['id'] == tmp_data.data['bundle_id']]
+                    if info:
+                        tmp_result.update(info[0])
+                    data.append(tmp_result)
                 users = Account.objects.filter(Q(group = 'perform') | Q(group = 'manager')).all()
                 ser = serializers.UserINFO(users, many=True)
                 return Response(
-                    {'page': page_number, 'data': data, 'multi': custom_com['multi'], 'multi_list': ser.data})
+                    {'page': count, 'data': data, 'multi': custom_com['multi'], 'multi_list': ser.data})
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(status=500)
