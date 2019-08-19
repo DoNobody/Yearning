@@ -22,4 +22,4 @@ inception_enable_column_charset=1
 inception_check_identifier=0
 inception_enable_identifer_keyword=1
 inception_max_update_rows=1000000000
-inception_osc_on=1
+inception_osc_on=0

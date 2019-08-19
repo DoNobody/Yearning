@@ -296,45 +296,48 @@ class query_worklf(baseview.BaseView):
             highlist = {}
             databaseSet = query_order.objects.filter(username=request.user, query_per=1).all()
             for dbcon in databaseSet:
-                tablelist = []
-                _connection = DatabaseList.objects.filter(connection_name=dbcon.connection_name).first()
-                with con_database.SQLgo(ip=_connection.ip,
-                                        user=_connection.username,
-                                        password=_connection.password,
-                                        port=_connection.port) as f:
-                    dataname = f.query_info(sql='show databases')
-                children = []
-                ignore = exclued_db_list()
-                for index, uc in sorted(enumerate(dataname), reverse=True):
-                    for cc in ignore:
-                        if uc['Database'] == cc:
-                            del dataname[index]
-                for i in dataname:
+                try:
+                    tablelist = []
+                    _connection = DatabaseList.objects.filter(connection_name=dbcon.connection_name).first()
                     with con_database.SQLgo(ip=_connection.ip,
                                             user=_connection.username,
                                             password=_connection.password,
-                                            port=_connection.port,
-                                            db=i['Database']) as f:
-                        tablename = f.query_info(sql='show tables')
-                    highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
-                    for c in tablename:
-                        key = 'Tables_in_%s' % i['Database']
-                        highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
-                        children.append({
-                            'title': c[key]
-                        })
-                    tablelist.append({
-                        'title': i['Database'],
-                        'children': children
-                    })
+                                            port=_connection.port) as f:
+                        dataname = f.query_info(sql='show databases')
                     children = []
-                db_info_tree = {
-                    'title': dbcon.connection_name,
-                    'expand': 'true',
-                    'children': tablelist,
-                    'export': dbcon.export
-                }
-                data.append(db_info_tree)
+                    ignore = exclued_db_list()
+                    for index, uc in sorted(enumerate(dataname), reverse=True):
+                        for cc in ignore:
+                            if uc['Database'] == cc:
+                                del dataname[index]
+                    for i in dataname:
+                        with con_database.SQLgo(ip=_connection.ip,
+                                                user=_connection.username,
+                                                password=_connection.password,
+                                                port=_connection.port,
+                                                db=i['Database']) as f:
+                            tablename = f.query_info(sql='show tables')
+                        highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
+                        for c in tablename:
+                            key = 'Tables_in_%s' % i['Database']
+                            highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
+                            children.append({
+                                'title': c[key]
+                            })
+                        tablelist.append({
+                            'title': i['Database'],
+                            'children': children
+                        })
+                        children = []
+                    db_info_tree = {
+                        'title': dbcon.connection_name,
+                        'expand': 'true',
+                        'children': tablelist,
+                        'export': dbcon.export
+                    }
+                    data.append(db_info_tree)
+                except Exception as e:
+                    CUSTOM_ERROR.error(e)
             return Response({'info': json.dumps(data), 'status': 'status', 'highlight': highlist})
 
     def delete(self, request, args: str = None):
