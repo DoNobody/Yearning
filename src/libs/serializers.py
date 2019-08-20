@@ -41,14 +41,14 @@ class SQLGeneratDic(serializers.HyperlinkedModelSerializer):
         )
 
 
-class Sqllist(serializers.HyperlinkedModelSerializer):
+class DBlist(serializers.HyperlinkedModelSerializer):
     '''
     数据库连接信息serializers
     '''
 
     class Meta:
         model = DatabaseList
-        fields = ('id', 'connection_name', 'ip', 'computer_room', 'password', 'port', 'username')
+        fields = ('id', 'connection_name', 'ip', 'computer_room', 'port', 'username', 'dbtype', 'has_super_perm', 'has_repl_perm')
 
 
 class query_con(serializers.HyperlinkedModelSerializer):

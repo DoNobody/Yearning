@@ -90,6 +90,9 @@ class DatabaseList(models.Model):
     password = models.CharField(max_length=50)  # 数据库密码
     before = models.TextField(null=True)  # 提交工单 钉钉webhook发送内容
     after = models.TextField(null=True)  # 工单执行成功后 钉钉webhook发送内容
+    dbtype = models.CharField(max_length=50, default='mysql') # 数据库类型 mysql,postgres
+    has_super_perm = models.BooleanField(default=False)
+    has_repl_perm = models.BooleanField(default=False)
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
 
 class SqlRecord(models.Model):

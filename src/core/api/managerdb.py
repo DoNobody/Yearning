@@ -8,7 +8,7 @@ from libs import util
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.db import transaction
-from libs.serializers import Sqllist, Getdingding
+from libs.serializers import DBlist, Getdingding
 from core.models import (
     DatabaseList,
     SqlDictionary,
@@ -59,7 +59,7 @@ class management_db(baseview.SuperUserpermissions):
                 start = int(page) * 10 - 10
                 end = int(page) * 10
                 info = DatabaseList.objects.all().order_by('connection_name')[start:end]
-                serializers = Sqllist(info, many=True)
+                serializers = DBlist(info, many=True)
                 data = SqlDictionary.objects.all().values('Name')
                 data.query.group_by = ['Name']  # 不重复表名
 
@@ -92,14 +92,7 @@ class management_db(baseview.SuperUserpermissions):
             return HttpResponse(status=500)
         else:
             try:
-                DatabaseList.objects.get_or_create(
-                    connection_name=data['connection_name'],
-                    ip=data['ip'],
-                    computer_room=data['computer_room'],
-                    username=data['username'],
-                    password=data['password'],
-                    port=data['port']
-                )
+                DatabaseList.objects.get_or_create(**data)
                 return Response('ok')
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
@@ -108,13 +101,9 @@ class management_db(baseview.SuperUserpermissions):
     def put(self, request, args=None):
 
         '''
-
         :argument 测试数据库连接,并返回测试结果数据
-
         :return: success or fail
-
         '''
-
         if args == 'test':
 
             try:
@@ -144,12 +133,7 @@ class management_db(baseview.SuperUserpermissions):
                 try:
                     DatabaseList.objects.filter(
                         connection_name=update_data['connection_name'],
-                        computer_room=update_data['computer_room']).update(
-                        ip=update_data['ip'],
-                        username=update_data['username'],
-                        password=update_data['password'],
-                        port=update_data['port']
-                    )
+                        computer_room=update_data['computer_room']).update(**update_data)
                     return Response('数据信息更新成功！')
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')

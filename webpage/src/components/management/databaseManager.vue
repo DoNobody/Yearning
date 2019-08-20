@@ -32,6 +32,18 @@
             <Form-item label="密码:" prop="password">
               <Input v-model="formItem.password" placeholder="请输入" type="password"></Input>
             </Form-item>
+            <Form-item label="类型:" prop="dbtype">
+              <Select v-model="formItem.dbtype" placeholder="请选择数据库类型" style="width: 60%" transfer>
+                    <Option v-for="i in dbtype" :value="i" :key="i">{{i}}</Option>
+                  </Select>
+            </Form-item>
+            <Form-item label="有无最高权限:" prop="has_super_perm">
+              <Checkbox  v-model="formItem.has_super_perm"></Checkbox >
+            </Form-item>
+            <Form-item label="有无Binlog权限:" prop="tags_has_repl_perm">
+              <Checkbox  v-model="formItem.has_repl_perm"></Checkbox >
+            </Form-item>
+            
             <Button type="info" @click="testlink()">测试连接</Button>
             <Button type="success" @click="add()" style="margin-left: 5%">确定</Button>
             <Button type="warning" @click="del()" style="margin-left: 5%">取消</Button>
@@ -150,6 +162,17 @@
         <FormItem label="密码:">
           <Input v-model="editbaseinfo.password" type="password"></Input>
         </FormItem>
+        <FormItem label="类型:">
+          <Select v-model="editbaseinfo.dbtype" placeholder="editbaseinfo.tags.dbtype" style="width: 60%" transfer>
+              <Option v-for="i in dbtype" :value="i" :key="i">{{i}}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="有无最高权限:">
+          <Checkbox  v-model="editbaseinfo.has_super_perm"></Checkbox >
+        </FormItem>
+        <FormItem label="有无Binlog权限:">
+          <Checkbox  v-model="editbaseinfo.has_repl_perm"></Checkbox >
+        </FormItem>
       </Form>
     </Modal>
 
@@ -178,8 +201,8 @@
             key: 'ip'
           },
           {
-            title: '机房',
-            key: 'computer_room'
+            title: '类型',
+            key: 'dbtype'
           },
           {
             title: '操作',
@@ -234,6 +257,7 @@
         searchkey: '',
         searchkeyLazy: '',
         modal: false,
+        dbtype: ['mysql', 'postgres'],
         // 添加数据库信息
         formItem: {
           name: '',
@@ -241,7 +265,10 @@
           add: '',
           username: '',
           password: '',
-          port: ''
+          port: '',
+          dbtype: '',
+          has_super_perm: false,
+          has_repl_perm: false
         },
         // 添加表单验证规则
         ruleInline: {
@@ -268,6 +295,11 @@
           password: [{
             required: true,
             message: '请填写密码',
+            trigger: 'blur'
+          }],
+          dbtype: [{
+            required: true,
+            message: '请选择数据库类型',
             trigger: 'blur'
           }]
         },
@@ -338,7 +370,10 @@
               'computer_room': this.formItem.add,
               'username': this.formItem.username,
               'password': this.formItem.password,
-              'port': this.formItem.port
+              'port': this.formItem.port,
+              'dbtype': this.formItem.dbtype,
+              'has_super_perm': this.formItem.has_super_perm,
+              'has_repl_perm': this.formItem.has_repl_perm
             }
             axios.post(util.url + '/management_db/', {
               'data': JSON.stringify(data)
