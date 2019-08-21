@@ -37,10 +37,10 @@
                     <Option v-for="i in dbtype" :value="i" :key="i">{{i}}</Option>
                   </Select>
             </Form-item>
-            <Form-item label="有无最高权限:" prop="has_super_perm">
+            <Form-item label="有最高权限:" prop="has_super_perm">
               <Checkbox  v-model="formItem.has_super_perm"></Checkbox >
             </Form-item>
-            <Form-item label="有无Binlog权限:" prop="tags_has_repl_perm">
+            <Form-item label="有Binlog权限:" prop="has_repl_perm">
               <Checkbox  v-model="formItem.has_repl_perm"></Checkbox >
             </Form-item>
             
@@ -167,10 +167,10 @@
               <Option v-for="i in dbtype" :value="i" :key="i">{{i}}</Option>
           </Select>
         </FormItem>
-        <FormItem label="有无最高权限:">
+        <FormItem label="有最高权限:">
           <Checkbox  v-model="editbaseinfo.has_super_perm"></Checkbox >
         </FormItem>
-        <FormItem label="有无Binlog权限:">
+        <FormItem label="有Binlog权限:">
           <Checkbox  v-model="editbaseinfo.has_repl_perm"></Checkbox >
         </FormItem>
       </Form>
