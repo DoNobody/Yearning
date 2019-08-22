@@ -14,7 +14,8 @@ from core.models import (
 )
 from libs.serializers import (
     Area,
-    UserINFO
+    UserINFO,
+    DBlist
 )
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
@@ -49,13 +50,8 @@ class addressing(baseview.BaseView):
                         for i in permission_spec['querycon']:
                             con_instance = DatabaseList.objects.filter(connection_name=i).first()
                             if con_instance:
-                                con_name.append(
-                                    {
-                                        'id': con_instance.id,
-                                        'connection_name': con_instance.connection_name,
-                                        'ip': con_instance.ip ,
-                                        'computer_room': con_instance.computer_room
-                                    })
+                                serial_db = DBlist(con_instance)
+                                con_name.append(serial_db.data)
                     return Response({'assigend': permission_spec['person'], 'connection': con_name,
                                      'custom': custom_com['con_room']})
                 else:
@@ -64,13 +60,8 @@ class addressing(baseview.BaseView):
                     for i in permission_spec[_type]:
                         con_instance = DatabaseList.objects.filter(connection_name=i).first()
                         if con_instance:
-                            con_name.append(
-                                {
-                                    'id': con_instance.id,
-                                    'connection_name': con_instance.connection_name,
-                                    'ip': con_instance.ip,
-                                    'computer_room': con_instance.computer_room
-                                })
+                            serial_db = DBlist(con_instance)
+                            con_name.append(serial_db.data)
                     dic = ''
                 info = Account.objects.filter(Q(group='admin') | Q(group='manager')).all()
                 serializers = UserINFO(info, many=True)
@@ -97,18 +88,15 @@ class addressing(baseview.BaseView):
             else:
                 _connection = DatabaseList.objects.filter(id=con_id).first()
                 try:
-                    with con_database.SQLgo(
-                            ip=_connection.ip,
-                            user=_connection.username,
-                            password=_connection.password,
-                            port=_connection.port
-                    ) as f:
-                        res = f.baseItems(sql='show databases')
+                    _c = _connection.get_conn()
+                    with _c as f:
+                        ret = f.get_dbs()
+                        res = [item[0] for item in ret['data']]
                         exclude_db = serachsql.exclued_db_list()
                         for db in exclude_db:
                             if db in res:
                                 res.remove(db)
-                        return Response(res)
+                        return Response(list(set(res)))
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return HttpResponse(status=500)
@@ -123,14 +111,10 @@ class addressing(baseview.BaseView):
             else:
                 _connection = DatabaseList.objects.filter(id=con_id).first()
                 try:
-                    with con_database.SQLgo(
-                            ip=_connection.ip,
-                            user=_connection.username,
-                            password=_connection.password,
-                            port=_connection.port,
-                            db=basename
-                    ) as f:
-                        res = f.baseItems(sql='show tables')
+                    _c = _connection.get_conn(database=basename)
+                    with _c as f:
+                        ret = f.get_tables()
+                        res = [item[0] for item in ret["data"]]
                         return Response(res)
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
@@ -147,17 +131,12 @@ class addressing(baseview.BaseView):
             else:
                 try:
                     _connection = DatabaseList.objects.filter(id=con_id).first()
-                    with con_database.SQLgo(
-                            ip=_connection.ip,
-                            user=_connection.username,
-                            password=_connection.password,
-                            port=_connection.port,
-                            db=basename
-                    ) as f:
-                        field = f.gen_alter(table_name=table)
-                        sql = f.get_create_sql(table_name=table)
-                        index = f.index(table_name=table)
-                        return Response({"field":field,"sql":sql, 'index':index})
+                    _c = _connection.get_conn(database=basename,dictCursor=True)
+                    with _c as f:
+                        desc_table = f.desc_table(table_name=table)
+                        create_table_sql = f.get_create_table_sql(table_name=table)
+                        table_index = f.get_index(table_name=table)
+                        return Response({"field":desc_table['data'],"sql":create_table_sql['data'], 'index':table_index['data']})
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return HttpResponse(status=500)

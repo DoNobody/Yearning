@@ -86,24 +86,24 @@
               <TabPane label="生成添加字段" name="order3" icon="md-add">
                 <Table stripe :columns="addcolums" :data="add_row" height="385" border></Table>
                 <div style="margin-top: 5%">
-                  <Input v-model="Add_tmp.Field" placeholder="字段名" style="width: 10%"></Input>
+                  <Input v-model="Add_tmp.COLUMN_NAME" placeholder="字段名" style="width: 10%"></Input>
                   <Select v-model="Add_tmp.Species" style="width: 15%" transfer placeholder="字段类型">
                     <Option v-for="i in optionData" :key="i" :value="i">{{i}}</Option>
                   </Select>
                   <Input v-model="Add_tmp.Len" placeholder="字段长度" style="width: 10%"></Input>
-                  <Select v-model="Add_tmp.Null" style="width: 15%" placeholder="字段可以为空" transfer>
+                  <Select v-model="Add_tmp.IS_NULLABLE" style="width: 15%" placeholder="字段可以为空" transfer>
                     <Option value="YES">YES</Option>
                     <Option value="NO">NO</Option>
                   </Select>
-                  <Input v-model="Add_tmp.Default" placeholder="默认值" style="width: 15%"></Input>
-                  <Input v-model="Add_tmp.Extra" placeholder="字段备注" style="width: 15%"></Input>
-                  <Button type="warning" @click.native="ClearColumns">清空</Button>
-                  <Button type="info" @click.native="AddColumns()">添加</Button>
+                  <Input v-model="Add_tmp.COLUMN_DEFAULT" placeholder="默认值" style="width: 15%"></Input>
+                  <Input v-model="Add_tmp.COLUMN_COMMENT" placeholder="字段备注" style="width: 15%"></Input>
+                  <Button type="warning" @click.native="ClearColumns" :disabled="!!validate_postgres">清空</Button>
+                  <Button type="info" @click.native="AddColumns()" :disabled="!!validate_postgres">添加</Button>
                 </div>
               </TabPane>
               <TabPane label="生成修改&删除字段" name="order4" icon="md-crop">
                 <edittable refs="table2" v-model="TableDataNew" :columns-list="tabcolumns" @index="remove"
-                           @on-change="cell_change"></edittable>
+                           @on-change="cell_change" :disabled="!!validate_postgres"></edittable>
               </TabPane>
               <TabPane label="添加&删除索引" name="order2" icon="md-add">
                 <editindex :tabledata="TableIndex" :table_name="formItem.tablename"
@@ -237,31 +237,31 @@
         tabcolumns: [
           {
             title: '字段名',
-            key: 'Field'
+            key: 'COLUMN_NAME'
           },
           {
             title: '字段类型',
-            key: 'Type',
+            key: 'COLUMN_TYPE',
             editable: true
           },
           {
             title: '字段是否为空',
-            key: 'Null',
+            key: 'IS_NULLABLE',
             editable: true,
             option: true
           },
           {
             title: '默认值',
-            key: 'Default',
+            key: 'COLUMN_DEFAULT',
             editable: true
           },
           {
             title: '索引类型',
-            key: 'Key'
+            key: 'COLUMN_KEY'
           },
           {
             title: '备注',
-            key: 'Extra'
+            key: 'COLUMN_COMMENT'
           },
           {
             title: '操作',
@@ -273,11 +273,11 @@
         ],
         putdata: [],
         Add_tmp: {
-          Field: '',
-          Type: '',
-          Null: null,
-          Default: null,
-          Extra: null,
+          COLUMN_NAME: '',
+          COLUMN_TYPE: '',
+          IS_NULLABLE: null,
+          COLUMN_DEFAULT: null,
+          COLUMN_COMMENT: null,
           Len: '',
           Species: null
         },
@@ -286,23 +286,23 @@
         addcolums: [
           {
             title: '字段名',
-            key: 'Field'
+            key: 'COLUMN_NAME'
           },
           {
             title: '字段类型',
-            key: 'Type'
+            key: 'COLUMN_TYPE'
           },
           {
             title: '是否为空',
-            key: 'Null'
+            key: 'IS_NULLABLE'
           },
           {
             title: '默认值',
-            key: 'Default'
+            key: 'COLUMN_DEFAULT'
           },
           {
             title: '备注',
-            key: 'Extra'
+            key: 'COLUMN_COMMENT'
           },
           {
             title: 'action',
@@ -315,7 +315,7 @@
                 on: {
                   click: () => {
                     this.$Notice.error({
-                      title: `${this.add_row[params.index].Field}-临时字段删除成功!`
+                      title: `${this.add_row[params.index].COLUMN_NAME}-临时字段删除成功!`
                     })
                     this.add_row.splice(params.index, 1)
                   }
@@ -505,7 +505,11 @@
             })
               .then(res => {
                 this.TableDataNew = res.data.field
-                this.TableCreateSql = res.data.sql.replace(/\n/g, '<br>')
+                if (res.data.sql === undefined || res.data.sql.length === 0) {
+                  this.TableCreateSql = ''
+                } else {
+                  this.TableCreateSql = res.data.sql[0]['Create Sql'].replace(/\n/g, '<br>')
+                }
                 this.TableIndex = res.data.index
                 this.$Spin.hide()
               })
@@ -520,24 +524,24 @@
         })
       },
       AddColumns () {
-        if (this.Add_tmp.Field === '' || this.Add_tmp.Null === null || this.Add_tmp.Species === '') {
+        if (this.Add_tmp.COLUMN_NAME === '' || this.Add_tmp.IS_NULLABLE === null || this.Add_tmp.Species === '') {
           this.$Notice.warning({
             title: '字段名,是否为空，类型为必填项'
           })
         } else {
-          if (this.Add_tmp.Extra) {
-            this.Add_tmp.Extra = this.Add_tmp.Extra.replace(/\s+/g, '')
+          if (this.Add_tmp.COLUMN_COMMENT) {
+            this.Add_tmp.COLUMN_COMMENT = this.Add_tmp.COLUMN_COMMENT.replace(/\s+/g, '')
           }
           if (this.Add_tmp.Len !== '') {
-            this.Add_tmp.Type = `${this.Add_tmp.Species}(${this.Add_tmp.Len})`
+            this.Add_tmp.COLUMN_TYPE = `${this.Add_tmp.Species}(${this.Add_tmp.Len})`
           } else {
-            this.Add_tmp.Type = `${this.Add_tmp.Species}`
+            this.Add_tmp.COLUMN_TYPE = `${this.Add_tmp.Species}`
           }
           this.add_row.push(JSON.parse(JSON.stringify(this.Add_tmp)))
           for (let c of Object.keys(this.Add_tmp)) {
             this.Add_tmp[c] = ''
-            this.Add_tmp.Default = null
-            this.Add_tmp.Extra = null
+            this.Add_tmp.COLUMN_DEFAULT = null
+            this.Add_tmp.COLUMN_COMMENT = null
           }
         }
       },
@@ -557,7 +561,7 @@
         this.getinfo()
       },
       confirmsql () {
-        if (this.Add_tmp.Field !== '') {
+        if (this.Add_tmp.COLUMN_NAME !== '') {
           util.notice('请将需要添加的字段添加进入临时表或者删除!')
         } else {
           this.putdata.push({
@@ -655,7 +659,6 @@
         this.$refs.tablename.setQuery('')
       },
       'formItem.connection_name': function (val) {
-        console.log(val)
         this.id = this.item.filter(item => {
             if (item.connection_name === val) {
               return item

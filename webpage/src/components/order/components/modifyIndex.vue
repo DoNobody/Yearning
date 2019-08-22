@@ -34,24 +34,24 @@ export default {
   data () {
     return {
       add_tmp: {
-        key_name: '',
-        Non_unique: '',
-        column_name: '',
+        INDEX_NAME: '',
+        NON_UNIQUE: '',
+        COLUMN_NAME: '',
         extra: 'NO'
       }, // 添加的index信息参数存储
       add_row: [], // 添加Index信息
       tabcolumns: [
         {
           title: '索引名称',
-          key: 'key_name'
+          key: 'INDEX_NAME'
         },
         {
           title: '是否唯一索引',
-          key: 'Non_unique'
+          key: 'NON_UNIQUE'
         },
         {
           title: '字段名',
-          key: 'column_name'
+          key: 'COLUMN_NAME'
         },
         {
           title: '操作',
@@ -76,19 +76,19 @@ export default {
       ], // index现有表字段
       addcolums: [{
           title: '索引名称',
-          key: 'key_name'
+          key: 'INDEX_NAME'
         },
         {
           title: '是否唯一索引',
-          key: 'Non_unique'
+          key: 'NON_UNIQUE'
         },
         {
           title: '字段名',
-          key: 'column_name'
+          key: 'COLUMN_NAME'
         },
         {
           title: '是否为全文索引',
-          key: 'fulltext'
+          key: 'FULLTEXT'
         },
         {
           title: 'action',
@@ -117,10 +117,10 @@ export default {
   methods: {
     addcolumns () {
       this.add_row.push({
-        'key_name': this.add_tmp.key_name,
-        'Non_unique': this.add_tmp.Non_unique,
-        'column_name': this.add_tmp.column_name,
-        'fulltext': this.add_tmp.extra
+        'INDEX_NAME': this.add_tmp.key_name,
+        'NON_UNIQUE': this.add_tmp.Non_unique,
+        'COLUMN_NAME': this.add_tmp.column_name,
+        'FULLTEXT': this.add_tmp.extra
       })
       this.add_tmp = {}
       this.add_tmp.extra = 'NO'

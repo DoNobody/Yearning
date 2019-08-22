@@ -32,30 +32,30 @@ class gen_sql(baseview.BaseView):
                     for i in data:
                         if 'edit' in i.keys():
                             info = gen_ddl.create_sql(select_name='edit',
-                                                      column_name=i['edit']['Field'],
-                                                      column_type=i['edit']['Type'],
-                                                      default=i['edit']['Default'],
-                                                      comment=i['edit']['Extra'],
-                                                      null=i['edit']['Null'],
+                                                      column_name=i['edit']['COLUMN_NAME'],
+                                                      column_type=i['edit']['COLUMN_TYPE'],
+                                                      default=i['edit']['COLUMN_DEFAULT'],
+                                                      comment=i['edit']['COLUMN_COMMENT'],
+                                                      null=i['edit']['IS_NULLABLE'],
                                                       table_name=i['table_name'],
                                                       base_name=base)
                             gen_sql.append(info)
 
                         elif 'del' in i.keys():
                             info = gen_ddl.create_sql(select_name='del',
-                                                      column_name=i['del']['Field'],
+                                                      column_name=i['del']['COLUMN_NAME'],
                                                       table_name=i['table_name'],
                                                       base_name=base)
                             gen_sql.append(info)
                         elif 'add' in i.keys() and i['add'] != []:
                             for n in i['add']:
                                 info = gen_ddl.create_sql(select_name='add',
-                                                          column_name=n['Field'],
+                                                          column_name=n['COLUMN_NAME'],
                                                           base_name=base,
-                                                          column_type=n['Type'],
-                                                          default=n['Default'],
-                                                          comment=n['Extra'],
-                                                          null=n['Null'],
+                                                          column_type=n['COLUMN_TYPE'],
+                                                          default=n['COLUMN_DEFAULT'],
+                                                          comment=n['COLUMN_COMMENT'],
+                                                          null=n['IS_NULLABLE'],
                                                           table_name=i['table_name'])
 
                                 gen_sql.append(info)
@@ -75,29 +75,29 @@ class gen_sql(baseview.BaseView):
                     for i in data:
                         if 'delindex' in i.keys():
                             info = gen_ddl.index(select_name='delindex',
-                                                 key_name=i['delindex']['key_name'],
+                                                 key_name=i['delindex']['INDEX_NAME'],
                                                  table_name=i['table_name'])
                             gen_sql.append(info)
                         elif 'addindex' in i.keys() and i['addindex'] != []:
                             for n in i['addindex']:
-                                if n['fulltext'] == "YES":
+                                if n['FULLTEXT'] == "YES":
                                     info = gen_ddl.index(table_name=i['table_name'],
-                                                         column_name=n['column_name'],
-                                                         key_name=n['key_name'],
-                                                         fulltext=n['fulltext'],
+                                                         column_name=n['COLUMN_NAME'],
+                                                         key_name=n['INDEX_NAME'],
+                                                         fulltext=n['FULLTEXT'],
                                                          select_name='addindex')
                                     gen_sql.append(info)
-                                elif n['Non_unique'] == "YES":
+                                elif n['NON_UNIQUE'] == "YES":
                                     info = gen_ddl.index(select_name='addindex',
-                                                         key_name=n['key_name'],
+                                                         key_name=n['INDEX_NAME'],
                                                          non_unique='unique',
-                                                         column_name=n['column_name'],
+                                                         column_name=n['COLUMN_NAME'],
                                                          table_name=i['table_name'])
                                     gen_sql.append(info)
                                 else:
                                     info = gen_ddl.index(select_name='addindex',
-                                                         key_name=n['key_name'],
-                                                         column_name=n['column_name'],
+                                                         key_name=n['INDEX_NAME'],
+                                                         column_name=n['COLUMN_NAME'],
                                                          table_name=i['table_name'])
                                     gen_sql.append(info)
                     return Response(gen_sql)

@@ -4,6 +4,8 @@
 '''
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from libs.conmanager import MysqlOpter, PostgresOpter
+
 import ast
 
 Q = models.Q
@@ -94,6 +96,16 @@ class DatabaseList(models.Model):
     has_super_perm = models.BooleanField(default=False)
     has_repl_perm = models.BooleanField(default=False)
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
+
+
+    def get_conn(self,database = None, dictCursor=False):
+        if self.dbtype.lower() == "mysql":
+            return  MysqlOpter(host=self.ip, user=self.username, password=self.password, db=database, port=self.port, dictCursor=dictCursor)
+        elif self.dbtype.lower() == "postgres":
+            return  PostgresOpter(host=self.ip, user=self.username, password=self.password, db=database, port=self.port, dictCursor=dictCursor)
+        else:
+            raise ValueError('dbtype unkown: {}'.format(self.dbtype))
+
 
 class SqlRecord(models.Model):
     '''

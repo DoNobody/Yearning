@@ -4,7 +4,10 @@ from abc import abstractmethod, ABCMeta
 import json
 import pymysql
 import psycopg2
+import psycopg2.extras
 import logging
+import subprocess
+
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
 
@@ -34,12 +37,16 @@ class DbOpter(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def desc_table(self, *args, ** kwargs):
+    def desc_table(self, *args, **kwargs):
         pass
 
+    @abstractmethod
+    def get_create_table_sql(self, *args, **kwargs):
+        pass
 
-
-
+    @abstractmethod
+    def get_index(self, *args, **kwargs):
+        pass
 
 
 
@@ -50,13 +57,14 @@ class MysqlOpter(DbOpter):
     con = object
     
 
-    def __init__(self, host=None, user=None, password=None, db=None, port=None, **kwargs):
+    def __init__(self, host=None, user=None, password=None, db=None, port=None, dictCursor=False, **kwargs):
         self.host = host
         self.user = user
         self.password = password
         self.db = db
         self.port = int(port)
         self.conn_kwargs = kwargs
+        self.dictCursor=dictCursor
 
     def __enter__(self):
         self.con = pymysql.connect(
@@ -76,16 +84,16 @@ class MysqlOpter(DbOpter):
     def execute(self, sql=None):
         data_dict = []
         id = 0
-        with self.con.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+        if self.dictCursor:
+            self.cursor = self.con.cursor(cursor=pymysql.cursors.DictCursor)
+        else:
+            self.cursor = self.con.cursor()
+        with self.cursor as cursor:
             sqllist = sql
             cursor.execute(sqllist)
             result = cursor.fetchall()
             for field in cursor.description:
-                if id == 0:
-                    head_info = {'title': field[0], "key": field[0]}
-                    id += 1
-                else:
-                    head_info = {'title': field[0], "key": field[0]}
+                head_info = {'title': field[0], "key": field[0]}
                 data_dict.append(head_info)
             len = cursor.rowcount
         return {'data': result, 'title': data_dict, 'len': len}
@@ -99,13 +107,8 @@ class MysqlOpter(DbOpter):
 
     def get_dicts(self):
         pass
-
-    def get_schemas(self):
-        return self.get_dbs()
     
-    def get_tables(self, db=None):
-        if db:
-            self.db = db
+    def get_tables(self):
         return self.execute('show tables;')
 
     def desc_table(self, table_name, db=None, **kwargs):
@@ -129,9 +132,7 @@ class MysqlOpter(DbOpter):
         """.format(self.db, table_name)
         return self.execute(desc_sql)
 
-    def get_index(self, table_name, db=None, **kwargs):
-        if db:
-            self.db=db
+    def get_index(self, table_name, **kwargs):
         index_sql="""SELECT
                 TABLE_NAME,
                 NON_UNIQUE,
@@ -145,21 +146,45 @@ class MysqlOpter(DbOpter):
         AND Table_name = '{}'""".format(self.db, table_name)
         return self.execute(index_sql)
 
+    def get_create_table_sql(self, table_name):
+        create_table_sql = 'show create table `%s`.`%s`;' % (self.db, table_name)
+        ret = self.execute(create_table_sql)
+        if self.dictCursor:
+            for inf in ret['data']:
+                keys = [item for item in inf.keys() if item.startswith("Create")]
+                if keys:
+                    inf["Create Sql"] = inf[keys[0]]
+                    del inf[keys[0]]
+                for old_k in ret['title']:
+                    if old_k['title'] == keys[0]:
+                        old_k['title'] = "Create Sql"
+                        old_k['key'] = "Create Sql"
+        else:
+            for inf in ret['title']:
+                if inf['key'].startswith("Create"):
+                    inf['key'] = "Create Sql"
+                    inf['title'] = "Create Sql"
+        return ret
+
+
 class PostgresOpter(DbOpter):
     """
     postgres 的操作实现类
     """
     
-    def __init__(self, host=None, user=None, password=None, db=None, port=None, **kwargs):
+    def __init__(self, host=None, user=None, password=None, db=None, port=None, dictCursor=False, **kwargs):
         self.host = host
         self.user = user
         self.password = password
         self.db = db
         self.port = int(port)
         self.conn_kwargs = kwargs
+        self.dictCursor = dictCursor
     
     def __enter__(self):
         #psycopg2.connect(database="testdb", user="postgres", password="pass123", host="127.0.0.1", port="5432")
+        if self.db is None:
+            self.db = "postgres"
         self.con = psycopg2.connect(
             host=self.host,
             user=self.user,
@@ -178,8 +203,11 @@ class PostgresOpter(DbOpter):
 
     def execute(self, sql=None):
         data_dict = []
-        id = 0
-        with self.con.cursor() as cursor:
+        if self.dictCursor:
+            self.cursor = self.con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+        else:
+            self.cursor = self.con.cursor()
+        with self.cursor as cursor:
             sqllist = sql
             cursor.execute(sqllist)
             result = cursor.fetchall()
@@ -192,21 +220,21 @@ class PostgresOpter(DbOpter):
 
     def get_con(self):
         return self.con
-    
+
+
     def get_dbs(self):
         return self.execute('SELECT * FROM pg_database;')
+
 
     def get_dicts(self):
         pass
     
-    def get_tables(self, db=None, schema=None):
-        if db:
-            self.db = db
+
+    def get_tables(self, schema=None):
         return self.execute("select CONCAT(schemaname, '.', tablename) as Tables_in_{} FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';".format(self.db))
 
-    def desc_table(self, table_name, db=None, **kwargs):
-        if db:
-            self.db = db
+
+    def desc_table(self, table_name, **kwargs):
         tab_name = table_name
         schemaname='public'
         if "." in table_name:
@@ -237,9 +265,7 @@ class PostgresOpter(DbOpter):
         return self.execute(desc_sql)
 
 
-    def get_index(self, table_name, db=None, **kwargs):
-        if db:
-            self.db = db
+    def get_index(self, table_name,**kwargs):
         tab_name = table_name
         schemaname='public'
         if "." in table_name:
@@ -248,39 +274,57 @@ class PostgresOpter(DbOpter):
         index_sql="""SELECT
             concat(n.nspname,'.',t.relname) as "TABLE_NAME"
             ,c.relname  as "INDEX_NAME"
-                ,CASE  
-                        WHEN i.indisunique = 't' THEN 1  
-                        ELSE 0  
-                END AS NON_UNIQUE
-                ,am.amname as "INDEX_TYPE"
+            ,CASE  
+                WHEN i.indisunique = 't' THEN 1
+                ELSE 0
+            END AS NON_UNIQUE
+            ,am.amname as "INDEX_TYPE"
             ,array_to_string(array_agg(a.attname), ', ') as "COLUMN_NAME"
-        FROM pg_catalog.pg_class c
-            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-            JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
-            JOIN pg_catalog.pg_class t ON i.indrelid   = t.oid
-            JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(i.indkey)
-                JOIN pg_am am ON am.oid=c.relam
-        WHERE c.relkind = 'i'
-            and n.nspname = '{}'
-                    and t.relname = '{}'
-            and pg_catalog.pg_table_is_visible(c.oid)
-        GROUP BY
-            n.nspname
-            ,t.relname
-            ,c.relname
-            ,i.indisunique
-            ,i.indexrelid
-                ,am.amname;""".format(schemaname, table_name)
+            FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
+                JOIN pg_catalog.pg_class t ON i.indrelid   = t.oid
+                JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(i.indkey)
+                    JOIN pg_am am ON am.oid=c.relam
+            WHERE c.relkind = 'i'
+                and n.nspname = '{}'
+                        and t.relname = '{}'
+                and pg_catalog.pg_table_is_visible(c.oid)
+            GROUP BY
+                n.nspname
+                ,t.relname
+                ,c.relname
+                ,i.indisunique
+                ,i.indexrelid
+                    ,am.amname;""".format(schemaname, tab_name)
         return self.execute(index_sql)
 
 
+    def get_create_table_sql(self, table_name):
+        tab_name = table_name
+        schemaname='public'
+        if "." in table_name:
+            tab_name = table_name.split('.')[-1]
+            schemaname = table_name.split('.')[0]
+        dumps_shell = """export PGPASSWORD={password};pg_dump -h {host} -U {user} -p {port} --schema-only -t "{schema}.{table}" {db}|grep -vE "^--|^$"
+        """.format(password=self.password, host=self.host, user= self.user, port=self.port, schema=schemaname, table=tab_name, db=self.db)
+        result_info = "Some Error"
+        call_shell_ret = subprocess.Popen(dumps_shell, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        output, errors = call_shell_ret.communicate()
+        if call_shell_ret.returncode == 0:
+            result_info = output
+        else:
+            result_info = errors
+        return {"data":[{"Table": table_name, "Create Sql": result_info}], "title": [{"title": "Table", "key": "Table"}, {"title": "Create Table", "key": "Create Table"}], "len": 1}
+
+
 if __name__ == "__main__":
-    m_con = MysqlOpter(host="127.0.0.1", user='root', password='root', db="test", port=3306)
+    m_con = MysqlOpter(host="127.0.0.1", user='root', password='root', db="test", port=3306, dictCursor=False)
     with m_con as con:
-        info = con.get_index('auth_permission')
+        info = con.get_create_table_sql('auth_permission')
         print(json.dumps(info))
 
-    p_con = PostgresOpter(host='127.0.0.1', user='postgres', password='example', db='mydb', port=5432)
+    p_con = PostgresOpter(host='127.0.0.1', user='postgres', password='example', db='mydb', port=5432, dictCursor=True)
     with p_con as con:
         info = con.get_index('items')
-        print(json.dumps(info,indent=2))
+        print(json.dumps(info,indent=2, ensure_ascii=False))
