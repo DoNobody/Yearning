@@ -29,7 +29,9 @@ export default {
   name: 'editindex',
   props: {
     tabledata: Array,
-    table_name: String
+    table_name: String,
+    connection_name: String,
+    basename: String
   },
   data () {
     return {
@@ -131,7 +133,9 @@ export default {
         'table_name': this.table_name
       })
       axios.put(`${util.url}/gensql/index`, {
-          'data': JSON.stringify(this.putdata)
+          'data': JSON.stringify(this.putdata),
+          'basename': this.basename,
+          'connection_name': this.connection_name
         })
         .then(mm => {
           this.children = mm.data

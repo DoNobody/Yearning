@@ -97,16 +97,16 @@
                   </Select>
                   <Input v-model="Add_tmp.COLUMN_DEFAULT" placeholder="默认值" style="width: 15%"></Input>
                   <Input v-model="Add_tmp.COLUMN_COMMENT" placeholder="字段备注" style="width: 15%"></Input>
-                  <Button type="warning" @click.native="ClearColumns" :disabled="!!validate_postgres">清空</Button>
-                  <Button type="info" @click.native="AddColumns()" :disabled="!!validate_postgres">添加</Button>
+                  <Button type="warning" @click.native="ClearColumns" >清空</Button>
+                  <Button type="info" @click.native="AddColumns()" >添加</Button>
                 </div>
               </TabPane>
               <TabPane label="生成修改&删除字段" name="order4" icon="md-crop">
                 <edittable refs="table2" v-model="TableDataNew" :columns-list="tabcolumns" @index="remove"
-                           @on-change="cell_change" :disabled="!!validate_postgres"></edittable>
+                           @on-change="cell_change" ></edittable>
               </TabPane>
               <TabPane label="添加&删除索引" name="order2" icon="md-add">
-                <editindex :tabledata="TableIndex" :table_name="formItem.tablename"
+                <editindex :tabledata="TableIndex" :table_name="formItem.tablename" :connection_name="formItem.connection_name" :basename="formItem.basename"
                            @on-indexdata="getindexconfirm"></editindex>
               </TabPane>
               <TabPane label="建表语句" name="order5" icon="md-crop">
@@ -429,7 +429,6 @@
             let tmp = this.formDynamic.replace(/(;|；)$/gi, '').replace(/；/g, ';')
             axios.put(`${util.url}/sqlsyntax/test`, {
               'id': this.id[0].id,
-              'base': this.formItem.basename,
               'sql': tmp
             })
               .then(res => {
@@ -570,14 +569,15 @@
           })
           axios.put(`${util.url}/gensql/sql`, {
             'data': JSON.stringify(this.putdata),
-            'basename': this.formItem.basename
+            'basename': this.formItem.basename,
+            'connection_name': this.formItem.connection_name
           })
             .then(res => {
               for (let i of res.data) {
                 if (this.formDynamic.length) {
-                  this.formDynamic += ';\n' + i.replace(/\s+/g, ' ')
+                  this.formDynamic += ';\n' + i.replace(/\s+/g, ' ').replace(';', ';\n')
                 } else {
-                  this.formDynamic = i.replace(/\s+/g, ' ')
+                  this.formDynamic = i.replace(/\s+/g, ' ').replace(';', ';\n')
                 }
               }
               this.putdata = []
@@ -601,7 +601,8 @@
               'sql': JSON.stringify(this.sql),
               'real_name': sessionStorage.getItem('real_name'),
               'type': 0,
-              'id': this.id[0].id
+              'id': this.id[0].id,
+              'connection_name': this.formItem.connection_name
             })
               .then(res => {
                 util.notice(res.data)
@@ -684,8 +685,6 @@
         this.getdatabases([this.formItem.connection_name])
       },
       'formItem.basename': function (val) {
-        console.log(this.formItem.computer_room + ':::: ' + this.formItem.connection_name + ':::' + val + ',,,,,')
-        console.log(this.formItem.computer_room && this.formItem.connection_name && val)
         if (this.formItem.computer_room && this.formItem.connection_name && val) {
           let data = JSON.stringify(this.formItem)
           axios.put(`${util.url}/workorder/tablename`, {
