@@ -167,17 +167,12 @@ class audit(baseview.BaseView):
                 if not order.sql:
                     return Response({'status': '工单内无sql语句!'})
                 data = DatabaseList.objects.filter(id=order.bundle_id).first()
-                info = {
-                    'host': data.ip,
-                    'user': data.username,
-                    'password': data.password,
-                    'db': order.basename,
-                    'port': data.port
-                }
                 try:
-                    with call_inception.Inception(LoginDic=info) as test:
+                    _Inception = data.get_inception(database = order.basename)
+                    with _Inception as test:
                         res = test.Check(sql=order.sql)
                         return Response({'result': res, 'status': 200})
+                    _inception = data.get_inception()
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return Response({'status': '请检查inception信息是否正确!'})

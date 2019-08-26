@@ -16,6 +16,9 @@ from .models import (
     grained
 )
 
+from psycopg2 import Error as PostgresError
+
+
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
 
@@ -143,37 +146,30 @@ class order_push_message(threading.Thread):
         '''
         time.sleep(self.order.delay * 60)
         try:
+            res = None
             detail = DatabaseList.objects.filter(id=self.order.bundle_id).first()
-
-            with call_inception.Inception(
-                    LoginDic={
-                        'host': detail.ip,
-                        'user': detail.username,
-                        'password': detail.password,
-                        'db': self.order.basename,
-                        'port': detail.port
-                    }
-            ) as f:
-                res = f.Execute(sql=self.order.sql, backup=self.order.backup)
-                for i in res:
-                    if i['errlevel'] not in [0, 1]:
-                        SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
+            _inception = detail.get_inception(database = self.order.basename)
+            with _inception as f:
+                try:
+                    f.Execute(sql=self.order.sql)
+                except PostgresError as e:
+                    SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
                     SqlRecord.objects.get_or_create(
-                        state=i['stagestatus'],
-                        sql=i['sql'],
-                        error=i['errormessage'],
+                        state="Execute Error",
+                        sql=self.order.sql,
+                        error=str(e),
                         workid=self.order.work_id,
-                        affectrow=i['affected_rows'],
-                        sequence=i['sequence'],
-                        execute_time=i['execute_time'],
-                        SQLSHA1=i['SQLSHA1'],
-                        backup_dbname=i['backup_dbname']
+                        affectrow=0,
+                        sequence='',
+                        execute_time=None,
+                        backup_dbname='',
+                        SQLSHA1='',
                     )
         except Exception as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}--SQL执行失败: {e}')
         finally:
-            status = SqlOrder.objects.filter(work_id=self.order.work_id).first()
-            if status.status != 4:
+            check = SqlOrder.objects.filter(work_id=self.order.work_id).first()
+            if check.status != 4:
                 SqlOrder.objects.filter(work_id=self.order.work_id).update(status=5)
 
     def agreed(self):

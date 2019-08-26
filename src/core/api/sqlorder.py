@@ -44,22 +44,16 @@ class sqlorder(baseview.BaseView):
         elif args == 'test':
             try:
                 id = request.data['id']
-                base = request.data['base']
+                base = request.data['basename']
                 sql = request.data['sql']
                 sql = str(sql).strip('\n').strip().rstrip(';')
                 data = DatabaseList.objects.filter(id=id).first()
-                info = {
-                    'host': data.ip,
-                    'user': data.username,
-                    'password': data.password,
-                    'db': base,
-                    'port': data.port
-                }
             except KeyError as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
             else:
                 try:
-                    with call_inception.Inception(LoginDic=info) as test:
+                    _Inception = data.get_inception(database = base)
+                    with _Inception as test:
                         res = test.Check(sql=sql)
                         return Response({'result': res, 'status': 200})
                 except Exception as e:
@@ -70,7 +64,7 @@ class sqlorder(baseview.BaseView):
         try:
             data = json.loads(request.data['data'])
             tmp = json.loads(request.data['sql'])
-            type = request.data['type']
+            type_str = request.data['type']
             real_name = request.data['real_name']
             id = request.data['id']
             user = request.user
@@ -94,7 +88,7 @@ class sqlorder(baseview.BaseView):
                     status=2,
                     basename=data['basename'],
                     sql=sql,
-                    type=type,
+                    type=type_str,
                     text=data['text'],
                     backup=data['backup'],
                     bundle_id=id,

@@ -302,7 +302,7 @@
               let tmp = this.formItem.textarea.replace(/(;|；)$/gi, '').replace(/；/g, ';')
               axios.put(`${util.url}/sqlsyntax/test`, {
                 'id': this.id[0].id,
-                'base': this.formItem.basename,
+                'basename': this.formItem.basename,
                 'sql': tmp
               })
                 .then(res => {

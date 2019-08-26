@@ -429,6 +429,7 @@
             let tmp = this.formDynamic.replace(/(;|；)$/gi, '').replace(/；/g, ';')
             axios.put(`${util.url}/sqlsyntax/test`, {
               'id': this.id[0].id,
+              'basename': this.formItem.basename,
               'sql': tmp
             })
               .then(res => {

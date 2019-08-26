@@ -28,7 +28,7 @@ class DbOpter(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def execute(self, *args, **kwargs):
+    def search(self, *args, **kwargs):
         pass
     
     @abstractmethod
@@ -81,7 +81,7 @@ class MysqlOpter(DbOpter):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.con.close()
 
-    def execute(self, sql=None):
+    def search(self, sql=None):
         data_dict = []
         id = 0
         if self.dictCursor:
@@ -103,13 +103,13 @@ class MysqlOpter(DbOpter):
         return self.con
     
     def get_dbs(self):
-        return self.execute('show databases;')
+        return self.search('show databases;')
 
     def get_dicts(self):
         pass
     
     def get_tables(self):
-        return self.execute('show tables;')
+        return self.search('show tables;')
 
     def desc_table(self, table_name, db=None, **kwargs):
         if db:
@@ -130,7 +130,7 @@ class MysqlOpter(DbOpter):
         AND a.TABLE_SCHEMA='{}'
         AND a.TABLE_NAME='{}';
         """.format(self.db, table_name)
-        return self.execute(desc_sql)
+        return self.search(desc_sql)
 
     def get_index(self, table_name, **kwargs):
         index_sql="""SELECT
@@ -144,11 +144,11 @@ class MysqlOpter(DbOpter):
         FROM  INFORMATION_SCHEMA.STATISTICS
         WHERE  TABLE_SCHEMA = '{}'
         AND Table_name = '{}'""".format(self.db, table_name)
-        return self.execute(index_sql)
+        return self.search(index_sql)
 
     def get_create_table_sql(self, table_name):
         create_table_sql = 'show create table `%s`.`%s`;' % (self.db, table_name)
-        ret = self.execute(create_table_sql)
+        ret = self.search(create_table_sql)
         if self.dictCursor:
             for inf in ret['data']:
                 keys = [item for item in inf.keys() if item.startswith("Create")]
@@ -201,7 +201,7 @@ class PostgresOpter(DbOpter):
     def get_con(self):
         return self.con
 
-    def execute(self, sql=None):
+    def search(self, sql=None):
         data_dict = []
         if self.dictCursor:
             self.cursor = self.con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
@@ -223,7 +223,7 @@ class PostgresOpter(DbOpter):
 
 
     def get_dbs(self):
-        return self.execute('SELECT * FROM pg_database;')
+        return self.search("""SELECT datname as "Database" FROM pg_database where datname not like 'template%';""")
 
 
     def get_dicts(self):
@@ -231,7 +231,7 @@ class PostgresOpter(DbOpter):
     
 
     def get_tables(self, schema=None):
-        return self.execute("select CONCAT(schemaname, '.', tablename) as Tables_in_{} FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';".format(self.db))
+        return self.search("""select CONCAT(schemaname, '.', tablename) as "Tables_in_{}" FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';""".format(self.db))
 
 
     def desc_table(self, table_name, **kwargs):
@@ -262,7 +262,7 @@ class PostgresOpter(DbOpter):
             cols.table_catalog    = '{}'
             AND cols.table_name   = '{}'
             AND cols.table_schema = '{}';""".format(self.db, tab_name, schemaname)
-        return self.execute(desc_sql)
+        return self.search(desc_sql)
 
 
     def get_index(self, table_name,**kwargs):
@@ -297,7 +297,7 @@ class PostgresOpter(DbOpter):
                 ,i.indisunique
                 ,i.indexrelid
                     ,am.amname;""".format(schemaname, tab_name)
-        return self.execute(index_sql)
+        return self.search(index_sql)
 
 
     def get_create_table_sql(self, table_name):
@@ -319,12 +319,13 @@ class PostgresOpter(DbOpter):
 
 
 if __name__ == "__main__":
-    m_con = MysqlOpter(host="127.0.0.1", user='root', password='root', db="test", port=3306, dictCursor=False)
-    with m_con as con:
-        info = con.get_create_table_sql('auth_permission')
-        print(json.dumps(info))
+    # m_con = MysqlOpter(host="127.0.0.1", user='root', password='root', db="test", port=3306, dictCursor=False)
+    # with m_con as con:
+    #     info = con.get_create_table_sql('auth_permission')
+    #     print(json.dumps(info))
 
     p_con = PostgresOpter(host='127.0.0.1', user='postgres', password='example', db='mydb', port=5432, dictCursor=True)
     with p_con as con:
-        info = con.get_index('items')
+        # info = con.search('ALTER TABLE public.items DROP COLUMN sdfsd')
+        # info = con.search("ALTER TABLE public.test1 ADD COLUMN test char(11) DEFAULT 'cc';")
         print(json.dumps(info,indent=2, ensure_ascii=False))

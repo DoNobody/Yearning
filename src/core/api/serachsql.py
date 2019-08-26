@@ -58,17 +58,12 @@ class search(baseview.BaseView):
             if not all([checkStartK(item, sql_first_key_list) for item in check[-1].strip().split(';') if item]):
                 return Response('只支持查询功能或删除不必要的空白行！')
             else:
-                _c = DatabaseList.objects.filter(
+                conn = DatabaseList.objects.filter(
                     connection_name=user.connection_name,
                     computer_room=user.computer_room
                 ).first()
-                with con_database.SQLgo(
-                        ip=_c.ip,
-                        password=_c.password,
-                        user=_c.username,
-                        port=_c.port,
-                        db=address['basename']
-                ) as f:
+                _conn = conn.get_conn(database=address['basename'], dictCursor=True)
+                with _conn as f:
                     try:
                         if limit.get('limit').strip() == '':
                             CUSTOM_ERROR.error('未设置全局最大limit值，系统自动设置为1000')
@@ -76,6 +71,7 @@ class search(baseview.BaseView):
                         else:
                             query_sql = replace_limit(check[-1].strip(), limit.get('limit'))
                         data_set = f.search(sql=query_sql)
+                        print(data_set)
                     except Exception as e:
                         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                         return HttpResponse(e)
@@ -105,22 +101,17 @@ class search(baseview.BaseView):
         delaytime = request.data.get('delaytime', 0)
         query_per = query_order.objects.filter(username=request.user, connection_name=dbcon, query_per=1).first()
         if query_per and query_per.query_per == 1:
-            _c = DatabaseList.objects.filter(
+            conn = DatabaseList.objects.filter(
                 connection_name=query_per.connection_name,
                 computer_room=query_per.computer_room
             ).first()
+            _conn = conn.get_conn(database=base, dictCursor=True)
             try:
-                with con_database.SQLgo(
-                        ip=_c.ip,
-                        password=_c.password,
-                        user=_c.username,
-                        port=_c.port,
-                        db=base
-                ) as f:
-                    if delaytime:
-                        data_set = f.search(sql='show slave status')
+                with _conn as f:
+                    if delaytime and conn.dbtype == 'mysql':
+                        data_set = f.execute(sql='show slave status')
                     else:
-                        data_set = f.search(sql='desc `%s`' % table)
+                        data_set = f.desc_table(table)
                 return Response(data_set)
             except Exception as e:
                 return Response({'error': '{}'.format(e)})
@@ -298,25 +289,23 @@ class query_worklf(baseview.BaseView):
             for dbcon in databaseSet:
                 try:
                     tablelist = []
-                    _connection = DatabaseList.objects.filter(connection_name=dbcon.connection_name).first()
-                    with con_database.SQLgo(ip=_connection.ip,
-                                            user=_connection.username,
-                                            password=_connection.password,
-                                            port=_connection.port) as f:
-                        dataname = f.query_info(sql='show databases')
+                    conn = DatabaseList.objects.filter(connection_name=dbcon.connection_name).first()
+                    _conn = conn.get_conn(dictCursor=True)
+                    with _conn as f:
+                        db_list = f.get_dbs()
+                        dataname = db_list.get('data',[])
                     children = []
+                    print(dataname)
                     ignore = exclued_db_list()
                     for index, uc in sorted(enumerate(dataname), reverse=True):
                         for cc in ignore:
                             if uc['Database'] == cc:
                                 del dataname[index]
                     for i in dataname:
-                        with con_database.SQLgo(ip=_connection.ip,
-                                                user=_connection.username,
-                                                password=_connection.password,
-                                                port=_connection.port,
-                                                db=i['Database']) as f:
-                            tablename = f.query_info(sql='show tables')
+                        _conn = conn.get_conn(database= i['Database'], dictCursor=True)
+                        with _conn as f:
+                            table_list = f.get_tables()
+                            tablename = table_list.get('data', [])
                         highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
                         for c in tablename:
                             key = 'Tables_in_%s' % i['Database']

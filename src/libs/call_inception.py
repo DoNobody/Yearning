@@ -7,18 +7,39 @@ INCEPTION operation
 cookie
 
 '''
+from abc import abstractmethod, ABCMeta
 
 from libs import util
 import pymysql
 import sqlparse
 import ast
 
+import psycopg2
+import psycopg2.extras
+
 pymysql.install_as_MySQLdb()
 
 
-class Inception(object):
-    def __init__(self, LoginDic=None):
-        self.__dict__.update(LoginDic)
+
+class Inception(metaclass=ABCMeta):
+    
+    @abstractmethod
+    def Execute(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def Check(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def BeautifySQL(sql):
+        return sqlparse.format(sql, reindent=True, keyword_case='upper')
+    
+
+
+class MysqlInception(Inception):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
         self.con = object
 
     def __enter__(self):
@@ -128,13 +149,65 @@ class Inception(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.con.close()
 
-    @staticmethod
-    def BeautifySQL(sql):
-        return sqlparse.format(sql, reindent=True, keyword_case='upper')
-
     def __str__(self):
         return '''
 
         InceptionSQL Class
 
         '''
+
+class PostgreIncetion(Inception):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+        self.con = None
+    
+    def __enter__(self):
+        if self.db is None:
+            self.db = "postgres"
+        self.con = psycopg2.connect(
+            host=self.host,
+            user=self.user,
+            password=self.password,
+            database=self.db,
+            port=self.port,
+            )
+        return self
+
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.con:
+            self.con.close()
+    
+    def __str__(self):
+        return '''
+        Postgres InceptionSQL Class
+        '''
+    
+    def Check(self, sql=None):
+        return [
+                {
+                    'ID': 1,
+                    'stage': 'UNCHECKED',
+                    'errlevel': 0,
+                    'stagestatus': 'SQL 正确性由Leader/DBA进行人工审核',
+                    'errormessage': 'Postgres 不提供自动的SQL语法检查',
+                    'sql': sql,
+                    'affected_rows': 'UNKNOWN',
+                    'SQLSHA1': 'NULL'
+                }
+            ]
+    
+    def Execute(self, sql=None, *args, **kwargs):
+        self.cursor = self.con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+        with self.cursor as cursor:
+            try:
+                sqllist =[ item for item in sql.split(';') if not item.startswith('--')]
+                sqllist = ';'.join(sqllist)
+                cursor.execute(sqllist)
+                self.con.commit()
+            except psycopg2.Error as e:
+                self.con.rollback()
+                raise e
+    
+    def GenerateStatements(self, *args, **kwargs):
+        return super().GenerateStatements(*args, **kwargs)

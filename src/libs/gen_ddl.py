@@ -80,7 +80,7 @@ def mysql_alter_table(select_name=None, base_name=None, column_name=None, column
 
 
 def mysql_alter_index(key_name=None, table_name=None, non_unique=None,
-          column_name=None, select_name=None, fulltext=None):
+          column_name=None, select_name=None, fulltext=None, dbtype='mysql'):
     if select_name == 'addindex':
         if fulltext == 'YES':
             return f'''ALTER TABLE `{table_name}` ADD FULLTEXT {key_name} ({column_name}) '''

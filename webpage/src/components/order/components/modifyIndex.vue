@@ -138,7 +138,10 @@ export default {
           'connection_name': this.connection_name
         })
         .then(mm => {
-          this.children = mm.data
+          for (let i of mm.data) {
+            this.children.push.apply(this.children, i.split(';'))
+          }
+          console.log(this.children)
           this.putdata = []
           this.add_row = []
           this.$emit('on-indexdata', this.children)

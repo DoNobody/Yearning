@@ -5,6 +5,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from libs.conmanager import MysqlOpter, PostgresOpter
+from libs.call_inception import MysqlInception, PostgreIncetion
 
 import ast
 
@@ -103,6 +104,15 @@ class DatabaseList(models.Model):
             return  MysqlOpter(host=self.ip, user=self.username, password=self.password, db=database, port=self.port, dictCursor=dictCursor)
         elif self.dbtype.lower() == "postgres":
             return  PostgresOpter(host=self.ip, user=self.username, password=self.password, db=database, port=self.port, dictCursor=dictCursor)
+        else:
+            raise ValueError('dbtype unkown: {}'.format(self.dbtype))
+
+
+    def get_inception(self, database = None):
+        if self.dbtype.lower() == "mysql":
+            return  MysqlInception(host=self.ip, user=self.username, password=self.password, db=database, port=self.port)
+        elif self.dbtype.lower() == "postgres":
+            return  PostgreIncetion(host=self.ip, user=self.username, password=self.password, db=database, port=self.port)
         else:
             raise ValueError('dbtype unkown: {}'.format(self.dbtype))
 
