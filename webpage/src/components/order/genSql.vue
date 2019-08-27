@@ -155,8 +155,9 @@
             </FormItem>
             <FormItem label="是否备份">
               <RadioGroup v-model="formItem.backup">
-                <Radio label="1">是</Radio>
+                <Radio label="1" :disabled="backup_disable">是</Radio>
                 <Radio label="0">否</Radio>
+                <Radio v-if="backup_disable" label="无备份权限" disabled></Radio>
               </RadioGroup>
             </FormItem>
             <FormItem label="确认提交：" required>
@@ -395,7 +396,8 @@
         assigned: [],
         formDynamic: '',
         validate_gen: true,
-        wordList: []
+        wordList: [],
+        backup_disable: false
       }
     },
     methods: {
@@ -679,6 +681,13 @@
               // 清空搜索内容
               this.$refs.basename.setQuery('')
               this.$refs.tablename.setQuery('')
+              // 设置backup默认选项
+              if (this.id.length > 0 && this.id[0].dbtype === 'mysql' && this.id[0].has_repl_perm) {
+                this.backup_disable = false
+              } else {
+                this.formItem.backup = '0'
+                this.backup_disable = true
+              }
             })
             .catch(() => {
               util.err_notice('无法连接数据库!请检查网络')

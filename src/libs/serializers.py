@@ -48,7 +48,7 @@ class DBlist(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = DatabaseList
-        fields = ('id', 'connection_name', 'ip', 'computer_room', 'port', 'username', 'dbtype', 'has_super_perm', 'has_repl_perm')
+        fields = ('id', 'connection_name', 'ip', 'computer_room', 'port', 'username', 'dbtype', 'has_super_perm', 'has_repl_perm', 'is_slave')
 
 
 class query_con(serializers.HyperlinkedModelSerializer):

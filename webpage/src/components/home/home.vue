@@ -22,51 +22,9 @@
   <div class="home-main">
     <Row>
       <Col span="8">
-        <Row>
-          <Card>
-            <Row type="flex" class="user-infor">
-              <Col span="8">
-                <Row class-name="made-child-con-middle" type="flex" align="middle">
-                  <img class="avator-img" src="../../assets/avatar.png"/>
-                </Row>
-              </Col>
-              <Col span="16" style="padding-left:6px;">
-                <Row class-name="made-child-con-middle" type="flex" align="middle">
-                  <div>
-                    <b class="card-user-infor-name">{{username}}</b>
-                    <p>Go confidently in the direction.</p>
-                  </div>
-                </Row>
-              </Col>
-            </Row>
-            <div class="line-gray"></div>
-            <Row class="margin-top-8">
-              <Col span="8">
-                <p class="notwrap">登陆时间:</p>
-              </Col>
-              <Col span="16" class="padding-left-8">{{time}}</Col>
-            </Row>
-          </Card>
-        </Row>
         <Row class="margin-top-10">
           <Card>
-            <p slot="title" class="card-title">
-              <Icon type="md-checkbox-outline"></Icon>
-              待办事项
-            </p>
-            <a type="text" slot="extra" @click.prevent="addNewToDoItem">
-              <Icon type="md-add"></Icon>
-            </a>
-            <Modal v-model="showAddNewTodo" title="添加新的待办事项" @on-ok="addNew" @on-cancel="cancelAdd">
-              <Row type="flex" justify="center">
-                <Input v-model="newToDoItemValue" icon="compose" placeholder="请输入..." style="width: 300px"/>
-              </Row>
-            </Modal>
-            <div class="to-do-list-con">
-              <div v-for="(item, index) in toDoList" :key="index" class="to-do-item">
-                <to-do-list-item :content="item.title" :todoitem="false" @deltodo="deltodo"></to-do-list-item>
-              </div>
-            </div>
+            <ownspace></ownspace>
           </Card>
         </Row>
       </Col>
@@ -90,32 +48,83 @@
           </Col>
         </Row>
         <Row class="margin-top-10">
-          <Col span="12">
-            <Card>
-              <p slot="title" class="card-title">
-                <Icon type="android-map"></Icon>
-                公告栏
-              </p>
-              <div class="data-sourcefunc-row">
-                <H2>欢迎使用SQL 审核平台</H2>
-                <br>
-                <div class="fuc">
-                  <H3>主要功能:</H3>
-                  <H4 v-for="i in board.title" :key="i">{{i}}</H4>
-                </div>
-              </div>
-            </Card>
-          </Col>
           <Col span="12" class="padding-left-10">
-            <Card>
-              <p slot="title" class="card-title">
-                <Icon type="ios-pulse-strong"></Icon>
-                DDL & DML 工单提交统计
-              </p>
-              <div class="data-source-row">
-                <data-source-pie></data-source-pie>
-              </div>
-            </Card>
+            <Row>
+              <Card>
+                <p slot="title" class="card-title">
+                <Icon type="android-map"></Icon>
+                  公告栏
+                </p>
+                <div class="data-sourcefunc-row">
+                  <H2>欢迎使用SQL 审核平台</H2>
+                  <br>
+                  <div class="fuc">
+                    <H3>主要功能:</H3>
+                    <H4 v-for="i in board.title" :key="i">{{i}}</H4>
+                  </div>
+                </div>
+              </Card>
+            </Row>
+            <Row>
+              <Card>
+                <p slot="title" class="card-title">
+                  <Icon type="ios-pulse-strong"></Icon>
+                  DDL & DML 工单提交统计
+                </p>
+                <div class="data-source-row">
+                  <data-source-pie></data-source-pie>
+                </div>
+              </Card>
+            </Row>
+          </Col>
+          <Col span="12">
+            <Row>
+              <Card>
+                <Row type="flex" class="user-infor">
+                  <Col span="8">
+                    <Row class-name="made-child-con-middle" type="flex" align="middle">
+                      <img class="avator-img" src="../../assets/avatar.png"/>
+                    </Row>
+                  </Col>
+                  <Col span="16" style="padding-left:6px;">
+                    <Row class-name="made-child-con-middle" type="flex" align="middle">
+                      <div>
+                        <b class="card-user-infor-name">{{username}}</b>
+                        <p>Go confidently in the direction.</p>
+                      </div>
+                    </Row>
+                  </Col>
+                </Row>
+                <div class="line-gray"></div>
+                <Row class="margin-top-8">
+                  <Col span="8">
+                    <p class="notwrap">登陆时间:</p>
+                  </Col>
+                  <Col span="16" class="padding-left-8">{{time}}</Col>
+                </Row>
+              </Card>
+            </Row>
+            <Row>
+              <Card>
+                <p slot="title" class="card-title">
+                <Icon type="md-checkbox-outline"></Icon>
+                  待办事项
+                </p>
+                <a type="text" slot="extra" @click.prevent="addNewToDoItem">
+                  <Icon type="md-add"></Icon>
+                </a>
+                <Modal v-model="showAddNewTodo" title="添加新的待办事项" @on-ok="addNew" @on-cancel="cancelAdd">
+                  <Row type="flex" justify="center">
+                    <Input v-model="newToDoItemValue" icon="compose" placeholder="请输入..." style="width: 300px"/>
+                  </Row>
+                </Modal>
+                <div class="to-do-list-con">
+                  <div v-for="(item, index) in toDoList" :key="index" class="to-do-item">
+                    <to-do-list-item :content="item.title" :todoitem="false" @deltodo="deltodo"></to-do-list-item>
+                  </div>
+                </div>
+              </Card>
+            </Row>
           </Col>
         </Row>
       </Col>
@@ -130,12 +139,14 @@
   import dataSourcePie from './components/dataSourcePie.vue'
   import inforCard from './components/inforCard.vue'
   import toDoListItem from './components/toDoListItem.vue'
+  import ownspace from '../personalCenter/own-space.vue'
 
   export default {
     components: {
       dataSourcePie,
       inforCard,
-      toDoListItem
+      toDoListItem,
+      ownspace
     },
     data () {
       return {

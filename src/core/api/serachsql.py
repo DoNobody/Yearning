@@ -108,7 +108,7 @@ class search(baseview.BaseView):
             _conn = conn.get_conn(database=base, dictCursor=True)
             try:
                 with _conn as f:
-                    if delaytime and conn.dbtype == 'mysql':
+                    if delaytime and conn.dbtype == 'mysql' and conn.is_slave:
                         data_set = f.execute(sql='show slave status')
                     else:
                         data_set = f.desc_table(table)
@@ -295,7 +295,6 @@ class query_worklf(baseview.BaseView):
                         db_list = f.get_dbs()
                         dataname = db_list.get('data',[])
                     children = []
-                    print(dataname)
                     ignore = exclued_db_list()
                     for index, uc in sorted(enumerate(dataname), reverse=True):
                         for cc in ignore:

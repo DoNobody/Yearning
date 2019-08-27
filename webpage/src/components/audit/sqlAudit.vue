@@ -50,7 +50,7 @@
           <Icon type="md-person"></Icon>
           工单审核
         </p>
-        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤当前页..." slot="extra"></Input>
         <Row>
           <Col span="24">
             <template v-if="auth === 'manager' || auth === 'admin'">

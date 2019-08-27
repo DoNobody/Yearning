@@ -53,7 +53,7 @@
           <Icon type="md-people"></Icon>
           系统用户表
         </p>
-        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格当前页..." slot="extra"></Input>
         <div class="edittable-con-1">
           <Table border :columns="columns6" :data="data5|tablefilter(searchkeyLazy)" stripe height="550"></Table>
         </div>

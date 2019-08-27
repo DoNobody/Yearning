@@ -77,15 +77,20 @@ class userinfo(baseview.BaseView):
             try:
                 username = request.data['username']
                 new_password = request.data['new']
+                old_password = request.data['old']
             except KeyError as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(status=500)
             else:
                 try:
                     user = Account.objects.get(username__exact=username)
-                    user.set_password(new_password)
-                    user.save()
-                    return Response('%s--密码修改成功!' % username)
+                    if user.from_ldap:
+                        return Response('%s--Ldap用户不允许修改密码!' % username)
+                    if user.check_password(old_password):
+                        user.set_password(new_password)
+                        user.save()
+                        return Response('%s--用户密码修改成功!' % username)
+                    return Response('%s--无法修改用户密码!' % username)
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return HttpResponse(status=500)
@@ -214,20 +219,18 @@ class ldapauth(baseview.AnyLogin):
             if valite:
                 user = Account.objects.filter(username=username).first()
                 if user:
-                    user.set_password(password)
                     user.save()
                     payload = jwt_payload_handler(user)
                     token = jwt_encode_handler(payload)
                     return Response({'token': token, 'res': '', 'permissions': user.group})
                 else:
-                    permissions = Account.objects.create_user(
+                    user, created = Account.objects.get_or_create(
                         username=username,
-                        password=password,
                         is_staff=0,
-                        group='perform')
-                    permissions.save()
-                    _user = authenticate(username=username, password=password)
-                    token = jwt_encode_handler(jwt_payload_handler(_user))
+                        group='perform',
+                        from_ldap=1)
+                    user.save()
+                    token = jwt_encode_handler(jwt_payload_handler(user))
                     return Response({'token': token, 'res': '', 'permissions': 'perform'})
             else:
                 return Response({'token': 'null', 'res': 'ldap账号认证失败,请检查ldap账号或ldap配置!'})

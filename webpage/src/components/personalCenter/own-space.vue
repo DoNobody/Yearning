@@ -194,7 +194,7 @@
   import axios from 'axios'
 
   export default {
-    name: 'own-space',
+    name: 'ownspace',
     data () {
       const valideRePassword = (rule, value, callback) => {
         if (value !== this.editPasswordForm.newPass) {
@@ -332,6 +332,7 @@
             this.savePassLoading = true
             axios.put(`${util.url}/userinfo/changepwd`, {
               'username': sessionStorage.getItem('user'),
+              'old': this.editPasswordForm.oldPass,
               'new': this.editPasswordForm.newPass
             })
               .then(res => {

@@ -10,7 +10,7 @@
           <Icon type="md-person"></Icon>
           查询审计
         </p>
-        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格当前页..." slot="extra"></Input>
         <Row>
           <Col span="24">
             <Table border :columns="columns" :data="table_data" stripe size="small"></Table>

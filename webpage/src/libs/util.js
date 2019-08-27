@@ -132,14 +132,21 @@ util.filternode = function (node, key) {
 
 util.tableSearch = function (source, searchkey) {
   if (searchkey.length !== 0) {
-      return source.filter((v) => {
-        for (let item of Object.values(v)) {
-          if (item && item.toString().toLowerCase().indexOf(searchkey.toLowerCase()) !== -1) {
-            return true
+      let tmp_ = JSON.parse(JSON.stringify(source))
+      let filterd = []
+      for (let v of tmp_) {
+        let t = {}
+        for (let item of Object.entries(v)) {
+          if (item[1] && item[1].toString().toLowerCase().indexOf(searchkey.toLowerCase()) !== -1) {
+            t[item[0]] = 'table-filted-cell-name'
           }
         }
-        return false
-      })
+        if (Object.keys(t).length) {
+          v['cellClassName'] = t
+          filterd.push(v)
+        }
+      }
+      return filterd
   } else {
     return source
   }

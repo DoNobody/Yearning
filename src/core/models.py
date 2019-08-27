@@ -40,6 +40,7 @@ class Account(AbstractUser):
     department = models.CharField(max_length=40)  # 部门
     auth_group = models.CharField(max_length=100, null=True)  # 细粒化权限组
     real_name = models.CharField(max_length=100, null=True, default='请添加真实姓名')  # 真实姓名
+    from_ldap = models.BooleanField(default=False)
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
 
 class SqlDictionary(models.Model):
@@ -96,6 +97,7 @@ class DatabaseList(models.Model):
     dbtype = models.CharField(max_length=50, default='mysql') # 数据库类型 mysql,postgres
     has_super_perm = models.BooleanField(default=False)
     has_repl_perm = models.BooleanField(default=False)
+    is_slave = models.BooleanField(default=False)
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
 
 

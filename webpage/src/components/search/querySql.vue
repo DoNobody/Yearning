@@ -56,14 +56,13 @@
           <Row>
             <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata && allsearchdata.length"></Input>
             <Table :columns="columnsName"
-              :data="allsearchdata|debouncedFilterTable(filtertablekeyLazy, page, splice_length)"
+              :data="allsearchdata_filtered.slice((page - 1) * splice_length, page * splice_length)"
               highlight-row
               ref="table"
-              stripe
               no-data-text="请输入SQL"
               border
               ></Table>
-            <Page :total="total" show-total show-sizer @on-change="splice_arr" @on-page-size-change="splice_len"  ref="totol"></Page>
+            <Page :total="total" show-total show-sizer @on-change="splice_arr" @on-page-size-change="splice_len"  ref="pager"></Page>
           </Row>
       </Col>
     </Row>
@@ -130,6 +129,7 @@
         id: null,
         total: 0,
         allsearchdata: [],
+        allsearchdata_filtered: [],
         put_info: {
           base: '',
           tablename: '',
@@ -218,6 +218,7 @@
               } else {
                 this.columnsName = res.data['title']
                 this.allsearchdata = res.data['data']
+                this.allsearchdata_filtered = JSON.parse(JSON.stringify(this.allsearchdata))
                 this.total = res.data['len']
               }
             })
@@ -254,7 +255,7 @@
         this.formItem.textarea = ''
         this.formItem.selectContent = ''
         this.columnsName = []
-        this.$refs.totol.currentPage = 1
+        this.$refs.pager.currentPage = 1
         this.total = 0
         this.page = 1
       },
@@ -390,7 +391,8 @@
       this.debouncedFilter = util._.debounce(this.keyfilter, 500)
       this.debouncedSelect = util._.debounce(this.setSelect, 500)
       this.debouncedSearchKey = util._.debounce(() => {
-        this.filtertablekeyLazy = this.filtertablekey
+        this.allsearchdata_filtered = util.tableSearch(this.allsearchdata, this.filtertablekey)
+        this.total = this.allsearchdata_filtered.length
       }, 500)
     },
     watch: {
@@ -402,11 +404,6 @@
       },
       filtertablekey: function () {
         this.debouncedSearchKey()
-      }
-    },
-    filters: {
-      debouncedFilterTable: function (val, filtertablekey, page, spliceLength) {
-        return util.tableSearch(val, filtertablekey).slice((page - 1) * spliceLength, page * spliceLength)
       }
     }
   }

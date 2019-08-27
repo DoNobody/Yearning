@@ -43,7 +43,10 @@
             <Form-item label="有Binlog权限:" prop="has_repl_perm">
               <Checkbox  v-model="formItem.has_repl_perm"></Checkbox >
             </Form-item>
-            
+            <FormItem label="是从数据库:">
+              <Checkbox  v-model="editbaseinfo.is_slave"></Checkbox >
+            </FormItem>
+
             <Button type="info" @click="testlink()">测试连接</Button>
             <Button type="success" @click="add()" style="margin-left: 5%">确定</Button>
             <Button type="warning" @click="del()" style="margin-left: 5%">取消</Button>
@@ -99,7 +102,7 @@
           <Icon type="md-apps" />
           数据库详情表
         </p>
-        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格当前页..." slot="extra"></Input>
         <div class="edittable-con-1">
           <Table :columns="columns" :data="rowdata|tablefilter(searchkeyLazy)" height="550"></Table>
         </div>
@@ -172,6 +175,9 @@
         </FormItem>
         <FormItem label="有Binlog权限:">
           <Checkbox  v-model="editbaseinfo.has_repl_perm"></Checkbox >
+        </FormItem>
+        <FormItem label="是从数据库:">
+          <Checkbox  v-model="editbaseinfo.is_slave"></Checkbox >
         </FormItem>
       </Form>
     </Modal>
@@ -268,7 +274,8 @@
           port: '',
           dbtype: '',
           has_super_perm: false,
-          has_repl_perm: false
+          has_repl_perm: false,
+          is_slave: false
         },
         // 添加表单验证规则
         ruleInline: {
@@ -373,7 +380,8 @@
               'port': this.formItem.port,
               'dbtype': this.formItem.dbtype,
               'has_super_perm': this.formItem.has_super_perm,
-              'has_repl_perm': this.formItem.has_repl_perm
+              'has_repl_perm': this.formItem.has_repl_perm,
+              'is_slave': this.formItem.is_slave
             }
             axios.post(util.url + '/management_db/', {
               'data': JSON.stringify(data)

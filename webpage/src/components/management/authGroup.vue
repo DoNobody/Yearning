@@ -2,7 +2,7 @@
   <div>
     <Row>
       <Card>
-        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格..." slot="extra"></Input>
+        <Input type="text" icon="search" v-model="searchkey" placeholder="过滤表格当前页..." slot="extra"></Input>
         <div>
           <Button type="primary" icon="md-people" @click="createModel">添加权限组</Button>
           <br>
