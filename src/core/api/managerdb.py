@@ -139,9 +139,14 @@ class management_db(baseview.SuperUserpermissions):
                 return HttpResponse(status=500)
             else:
                 try:
+                    tmp_data = {}
+                    columns = [field.column for field in DatabaseList._meta.fields]
+                    for keys1 in update_data.keys():
+                        if keys1 in columns:
+                            tmp_data.update({keys1:update_data[keys1]})
                     DatabaseList.objects.filter(
                         connection_name=update_data['connection_name'],
-                        computer_room=update_data['computer_room']).update(**update_data)
+                        computer_room=update_data['computer_room']).update(**tmp_data)
                     return Response('数据信息更新成功！')
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
