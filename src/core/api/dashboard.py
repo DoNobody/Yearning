@@ -35,8 +35,8 @@ class dashboard(baseview.BaseView):
     def get(self, request, args=None):
         if args == 'pie':
             try:
-                alter = SqlOrder.objects.filter(type=0, username=request.user).count()
-                sql = SqlOrder.objects.filter(type=1, username=request.user).count()
+                alter = SqlOrder.objects.filter(type=0, username=request.user, delete_yn=1).count()
+                sql = SqlOrder.objects.filter(type=1, username=request.user, delete_yn=1).count()
                 return Response([alter, sql])
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
@@ -46,7 +46,7 @@ class dashboard(baseview.BaseView):
             try:
                 dic = SqlDictionary.objects.count()
                 user = Account.objects.count()
-                order = SqlOrder.objects.filter(username=request.user).count()
+                order = SqlOrder.objects.filter(username=request.user, delete_yn=1).count()
                 link = DatabaseList.objects.count()
                 return Response([dic, user, order, link])
             except Exception as e:

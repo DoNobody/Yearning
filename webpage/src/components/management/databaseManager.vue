@@ -353,7 +353,8 @@
           'ip': this.formItem.ip,
           'user': this.formItem.username,
           'password': this.formItem.password,
-          'port': this.formItem.port
+          'port': this.formItem.port,
+          'dbtype': this.formItem.dbtype
         })
           .then(res => {
             util.notice(res.data)

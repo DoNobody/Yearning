@@ -60,7 +60,8 @@ class search(baseview.BaseView):
             else:
                 conn = DatabaseList.objects.filter(
                     connection_name=user.connection_name,
-                    computer_room=user.computer_room
+                    computer_room=user.computer_room,
+                    delete_yn=1
                 ).first()
                 _conn = conn.get_conn(database=address['basename'], dictCursor=True)
                 with _conn as f:
@@ -71,7 +72,6 @@ class search(baseview.BaseView):
                         else:
                             query_sql = replace_limit(check[-1].strip(), limit.get('limit'))
                         data_set = f.search(sql=query_sql)
-                        print(data_set)
                     except Exception as e:
                         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                         return HttpResponse(e)
@@ -103,7 +103,8 @@ class search(baseview.BaseView):
         if query_per and query_per.query_per == 1:
             conn = DatabaseList.objects.filter(
                 connection_name=query_per.connection_name,
-                computer_room=query_per.computer_room
+                computer_room=query_per.computer_room,
+                delete_yn = 1
             ).first()
             _conn = conn.get_conn(database=base, dictCursor=True)
             try:
@@ -160,10 +161,10 @@ class query_worklf(baseview.BaseView):
 
     def get(self, request, args: str = None):
         page = request.GET.get('page')
-        page_number = query_order.objects.count()
+        page_number = query_order.objects.filter(delete_yn=1).count()
         start = int(page) * 20 - 20
         end = int(page) * 20
-        info = query_order.objects.all().order_by('-id')[start:end]
+        info = query_order.objects.filter(delete_yn=1).all().order_by('-id')[start:end]
         serializers = Query_review(info, many=True)
         return Response({'page': page_number, 'data': serializers.data})
 
@@ -262,11 +263,11 @@ class query_worklf(baseview.BaseView):
 
         elif request.data['mode'] == 'status':
             try:
-                status = query_order.objects.filter(username=request.user, query_per=1).order_by('-id').first()
+                status = query_order.objects.filter(username=request.user, query_per=1, delete_yn=1).order_by('-id').first()
                 if status:
                     return Response(status.query_per)
                 else:
-                    status = query_order.objects.filter(username=request.user, query_per=2).order_by('-id').first()
+                    status = query_order.objects.filter(username=request.user, query_per=2, delete_yn=1).order_by('-id').first()
                     return Response(status.query_per)
             except:
                 return Response(0)
@@ -285,54 +286,57 @@ class query_worklf(baseview.BaseView):
         elif request.data['mode'] == 'info':
             data = []
             highlist = {}
-            databaseSet = query_order.objects.filter(username=request.user, query_per=1).all()
+            error_list = []
+            databaseSet = query_order.objects.filter(username=request.user, query_per=1, delete_yn=1).all()
             for dbcon in databaseSet:
                 try:
                     tablelist = []
-                    conn = DatabaseList.objects.filter(connection_name=dbcon.connection_name).first()
-                    _conn = conn.get_conn(dictCursor=True)
-                    with _conn as f:
-                        db_list = f.get_dbs()
-                        dataname = db_list.get('data',[])
-                    children = []
-                    ignore = exclued_db_list()
-                    for index, uc in sorted(enumerate(dataname), reverse=True):
-                        for cc in ignore:
-                            if uc['Database'] == cc:
-                                del dataname[index]
-                    for i in dataname:
-                        _conn = conn.get_conn(database= i['Database'], dictCursor=True)
+                    conn = DatabaseList.objects.filter(connection_name=dbcon.connection_name, delete_yn=1).first()
+                    if conn:
+                        _conn = conn.get_conn(dictCursor=True)
                         with _conn as f:
-                            table_list = f.get_tables()
-                            tablename = table_list.get('data', [])
-                        highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
-                        for c in tablename:
-                            key = 'Tables_in_%s' % i['Database']
-                            highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
-                            children.append({
-                                'title': c[key]
-                            })
-                        tablelist.append({
-                            'title': i['Database'],
-                            'children': children
-                        })
+                            db_list = f.get_dbs()
+                            dataname = db_list.get('data',[])
                         children = []
-                    db_info_tree = {
-                        'title': dbcon.connection_name,
-                        'expand': 'true',
-                        'children': tablelist,
-                        'export': dbcon.export
-                    }
-                    data.append(db_info_tree)
+                        ignore = exclued_db_list()
+                        for index, uc in sorted(enumerate(dataname), reverse=True):
+                            for cc in ignore:
+                                if uc['Database'] == cc:
+                                    del dataname[index]
+                        for i in dataname:
+                            _conn = conn.get_conn(database= i['Database'], dictCursor=True)
+                            with _conn as f:
+                                table_list = f.get_tables()
+                                tablename = table_list.get('data', [])
+                            highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
+                            for c in tablename:
+                                key = 'Tables_in_%s' % i['Database']
+                                highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
+                                children.append({
+                                    'title': c[key]
+                                })
+                            tablelist.append({
+                                'title': i['Database'],
+                                'children': children
+                            })
+                            children = []
+                        db_info_tree = {
+                            'title': dbcon.connection_name,
+                            'expand': 'true',
+                            'children': tablelist,
+                            'export': dbcon.export
+                        }
+                        data.append(db_info_tree)
                 except Exception as e:
                     CUSTOM_ERROR.error(e)
-            return Response({'info': json.dumps(data), 'status': 'status', 'highlight': highlist})
+                    error_list.append(str(e))
+            return Response({'info': json.dumps(data), 'status': 'status', 'highlight': highlist, 'error_list': error_list})
 
     def delete(self, request, args: str = None):
 
-        data = query_order.objects.filter(username=request.user).order_by('-id').first()
-        query_order.objects.filter(work_id=data.work_id).delete()
-        return Response('')
+        data = query_order.objects.filter(username=request.user, delete_yn = 1).order_by('-id').first()
+        query_order.objects.filter(work_id=data.work_id).update(delete_yn = 0)
+        return Response('delete Success')
 
 
 def push_message(message=None, type=None, user=None, to_addr=None, work_id=None, status=None):
@@ -360,14 +364,12 @@ class Query_order(baseview.BaseView):
         page = request.GET.get('page')
         page_size = request.GET.get('page_size', 10)
         if request.user.group == "admin":
-            sql_str = Q()
-            pn = query_order.objects.filter(sql_str).count()
+            sql_str = Q()&Q(delete_yn=1)
         elif request.user.group == "manager":
-            sql_str = Q(audit=request.user.username) | Q(username=request.user.username)
-            pn = query_order.objects.filter(sql_str).count()
+            sql_str = Q(delete_yn=1)&(Q(audit=request.user.username) | Q(username=request.user.username))
         else:
-            sql_str = Q(username=request.user.username)
-            pn = query_order.objects.filter(sql_str).count()
+            sql_str = Q(delete_yn=1)&Q(username=request.user.username)
+        pn = query_order.objects.filter(sql_str).count()
         start = (int(page) -1) * page_size
         end = int(page) * page_size
         user_list = query_order.objects.filter(sql_str).all().order_by('-id')[start:end]
@@ -378,8 +380,8 @@ class Query_order(baseview.BaseView):
         work_id_list = json.loads(request.data['work_id'])
         if request.user.group == "admin":
             for i in work_id_list:
-                query_order.objects.filter(work_id=i).delete()
+                query_order.objects.filter(work_id=i).update(delete_yn=0)
         elif request.user.group == "manager":
             for i in work_id_list:
-                query_order.objects.filter(Q(work_id=i) & (Q(username=request.user.username) | Q(audit=request.user.username))).delete()
+                query_order.objects.filter(Q(work_id=i) & (Q(username=request.user.username) | Q(audit=request.user.username))).update(delete_yn=0)
         return Response('申请记录已删除!')

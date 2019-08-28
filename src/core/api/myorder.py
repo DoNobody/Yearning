@@ -23,14 +23,14 @@ class order(baseview.BaseView):
         else:
             try:
                 page_number = SqlOrder.objects.filter(
-                    username=username).count()
+                    username=username, delete_yn=1).count()
                 start = (int(page) - 1) * 20
                 end = int(page) * 20
                 info = SqlOrder.objects.raw(
                     "select core_sqlorder.*,core_databaselist.connection_name,\
                     core_databaselist.computer_room from core_sqlorder INNER JOIN \
                     core_databaselist on core_sqlorder.bundle_id = core_databaselist.id \
-                    WHERE core_sqlorder.username = '%s'ORDER BY core_sqlorder.id DESC "
+                    WHERE core_sqlorder.username = '%s' and core_sqlorder.delete_yn = 1 ORDER BY core_sqlorder.id DESC "
                     % username)[start:end]
                 data = util.ser(info)
                 return Response({'page': page_number, 'data': data})

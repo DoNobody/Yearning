@@ -50,7 +50,8 @@ class MysqlInception(Inception):
                                    passwd=inception['password'],
                                    port=int(inception['port']),
                                    db='',
-                                   charset="utf8")
+                                   charset="utf8",
+                                   connect_timeout=5)
         return self
 
     def GenerateStatements(self, Sql: str = '', Type: str = '', backup=None):
@@ -170,6 +171,7 @@ class PostgreIncetion(Inception):
             password=self.password,
             database=self.db,
             port=self.port,
+            connect_timeout=5,
             )
         return self
 

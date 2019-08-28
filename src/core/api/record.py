@@ -27,7 +27,7 @@ class record_order(baseview.SuperUserpermissions):
             return HttpResponse(status=500)
         else:
             try:
-                pagenumber = SqlOrder.objects.filter(status=1, assigned=username).count()
+                pagenumber = SqlOrder.objects.filter(status=1, assigned=username, delete_yn = 1).count()
                 start = int(page) * 10 - 10
                 end = int(page) * 10
                 sql = SqlOrder.objects.raw(
@@ -35,7 +35,7 @@ class record_order(baseview.SuperUserpermissions):
                     select core_sqlorder.*,core_databaselist.connection_name, \
                     core_databaselist.computer_room from core_sqlorder \
                     INNER JOIN core_databaselist on \
-                    core_sqlorder.bundle_id = core_databaselist.id where core_sqlorder.status = 1 and core_sqlorder.assigned = '%s'\
+                    core_sqlorder.bundle_id = core_databaselist.id where core_sqlorder.status = 1 and core_sqlorder.delete_yn = 1 and core_sqlorder.assigned = '%s'\
                     ORDER BY core_sqlorder.id desc
                     ''' % username
                 )[start:end]

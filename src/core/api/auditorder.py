@@ -52,7 +52,7 @@ class audit(baseview.BaseView):
             try:
                 un_init = util.init_conf()
                 custom_com = ast.literal_eval(un_init['other'])
-                conn_info = DatabaseList.objects.filter().all()
+                conn_info = DatabaseList.objects.filter(delete_yn=1).all()
                 conn_id_name = [{'id':con.id, 'connection_name':con.connection_name, 'computer_room':con.computer_room} for con in conn_info ]
                 if request.user.group == 'admin':
                     if request_name:

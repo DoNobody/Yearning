@@ -36,26 +36,29 @@ class adminpremisson(baseview.SuperUserpermissions):
 
         '''
 
-        with con_database.SQLgo(
-                ip=_connection.ip,
-                user=_connection.username,
-                password=_connection.password,
-                db=basename,
-                port=_connection.port
-        ) as f:
-            res = f.baseItems(sql='show tables')
-            for i in res:
-                EveryData = f.showtable(table_name=i)
-                for c in EveryData:
-                    SqlDictionary.objects.get_or_create(
-                        Field=c['Field'],
-                        Type=c['Type'],
-                        Extra=c['Extra'],
-                        BaseName=basename,
-                        TableName=i,
-                        TableComment=c['TableComment'],
-                        Name=_connection.connection_name
-                    )
+        _conn = _connection.get_conn(database = basename, dictCursor=True)
+        with _conn as f: 
+            res = f.get_tables()
+            for i in res['data']:
+                colname = "Tables_in_{}".format(basename)
+                desc_table = f.desc_table(i[colname])
+                for c in desc_table.get("data",[]):
+                    tmp_dict = {}
+                    if not c.get('COLUMN_NAME'):
+                        continue
+                    tmp_dict.update({
+                        "BaseName": basename,
+                        "TableName": i[colname],
+                        "Name": _connection.connection_name,
+                        "Field":c.get('COLUMN_NAME')
+                    })
+                    if c.get('COLUMN_TYPE', ""):
+                        tmp_dict.update(Type=c.get('COLUMN_TYPE', ""))
+                    if c.get('COLUMN_COMMENT',""):
+                        tmp_dict.update(Extra=c.get('COLUMN_COMMENT',""))
+                    if c.get('TABLE_COMMENT', ""):
+                        tmp_dict.update(TableComment=c.get('TABLE_COMMENT', ""))
+                    SqlDictionary.objects.get_or_create(**tmp_dict)
 
     @staticmethod
     def GenerateTableData(basename=None, name=None, signal=None):

@@ -16,6 +16,7 @@ from core.models import (
     SqlOrder,
     grained
 )
+from libs.conmanager import MysqlOpter, PostgresOpter
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
@@ -55,10 +56,10 @@ class management_db(baseview.SuperUserpermissions):
             try:
                 un_init = util.init_conf()
                 custom_com = ast.literal_eval(un_init['other'])
-                page_number = DatabaseList.objects.count()
+                page_number = DatabaseList.objects.filter(delete_yn=1).count()
                 start = int(page) * 10 - 10
                 end = int(page) * 10
-                info = DatabaseList.objects.all().order_by('connection_name')[start:end]
+                info = DatabaseList.objects.filter(delete_yn=1).all().order_by('connection_name')[start:end]
                 serializers = DBlist(info, many=True)
                 data = SqlDictionary.objects.all().values('Name')
                 data.query.group_by = ['Name']  # 不重复表名
@@ -111,13 +112,20 @@ class management_db(baseview.SuperUserpermissions):
                 user = request.data['user']
                 password = request.data['password']
                 port = request.data['port']
+                dbtype = request.data['dbtype']
             except KeyError as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(status=500)
             else:
                 try:
-                    with con_database.SQLgo(ip=ip, user=user, password=password, port=port):
-                        return Response('连接成功!')
+                    if dbtype == "mysql":
+                        with MysqlOpter(host=ip, user=user, password=password, port=port):
+                            return Response('连接成功!')
+                    elif dbtype == "postgres":
+                        with PostgresOpter(host=ip, user=user, password=password, port=port):
+                            return Response('连接成功!')
+                    else:
+                        return Response("不支持的数据库类型", status=400)
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return Response('连接失败!')
@@ -154,9 +162,8 @@ class management_db(baseview.SuperUserpermissions):
                 con_id = DatabaseList.objects.filter(connection_name=args).first()
                 work_id = SqlOrder.objects.filter(bundle_id=con_id.id).first()
                 with transaction.atomic():
-                    SqlRecord.objects.filter(workid=work_id).delete()
-                    SqlOrder.objects.filter(bundle_id=con_id.id).delete()
-                    DatabaseList.objects.filter(connection_name=args).delete()
+                    SqlOrder.objects.filter(bundle_id=con_id.id).update(delete_yn=0)
+                    DatabaseList.objects.filter(connection_name=args).update(delete_yn=0)
                 per = grained.objects.all().values('username', 'permissions')
                 for i in per:
                     for c in i['permissions']:

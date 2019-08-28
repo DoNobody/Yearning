@@ -73,13 +73,15 @@ class MysqlOpter(DbOpter):
             passwd=self.password,
             db=self.db,
             charset='utf8mb4',
-            port=self.port, 
+            port=self.port,
+            connect_timeout=5, 
             **self.conn_kwargs
         )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.con.close()
+        if self.con:
+            self.con.close()
 
     def search(self, sql=None):
         data_dict = []
@@ -191,12 +193,14 @@ class PostgresOpter(DbOpter):
             password=self.password,
             database=self.db,
             port=self.port,
+            connect_timeout=5,
             **self.conn_kwargs
             )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.con.close()
+        if self.con:
+            self.con.close()
 
     def get_con(self):
         return self.con

@@ -98,6 +98,7 @@ class DatabaseList(models.Model):
     has_super_perm = models.BooleanField(default=False)
     has_repl_perm = models.BooleanField(default=False)
     is_slave = models.BooleanField(default=False)
+    delete_yn = models.IntegerField(null=False, default=1)  # 1:显示, 0:不显示
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
 
 
@@ -140,6 +141,7 @@ class Todolist(models.Model):
     '''
     username = models.CharField(max_length=50)  # 账户
     content = models.CharField(max_length=200)  # 内容
+    delete_yn = models.IntegerField(null=False, default=1)  # 1:显示, 0:不显示
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)
 
 class globalpermissions(models.Model):
@@ -188,4 +190,5 @@ class query_order(models.Model):
     audit = models.CharField(max_length=100, null=True)
     time = models.CharField(max_length=100, null=True)
     real_name = models.CharField(max_length=100, null=True)  # 真实姓名
+    delete_yn = models.IntegerField(null=False, default=1)  # 1:显示, 0:不显示
     updatetime = models.DateTimeField('修改时间', auto_now_add = True)

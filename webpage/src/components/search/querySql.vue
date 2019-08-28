@@ -379,6 +379,13 @@
                 }
                 this.wordList = JSON.parse(JSON.stringify(this.wordList_origin))
                 this.db_keyword = res.data.highlight
+                let errorList = res.data['error_list']
+                for (let i of errorList) {
+                  this.$Notice.error({
+                    title: '获取数据库信息错误',
+                    desc: i
+                  })
+                }
               })
           } else {
             this.$router.push({

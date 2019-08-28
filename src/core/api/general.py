@@ -38,7 +38,7 @@ class addressing(baseview.BaseView):
                 custom_com = ast.literal_eval(un_init['other'])
                 permission_spec = set_auth_group(request.user, **request.data)
                 if request.data['permissions_type'] == 'user' or request.data['permissions_type'] == 'own_space':
-                    info = DatabaseList.objects.all()
+                    info = DatabaseList.objects.filter(delete_yn=1).all()
                     con_name = Area(info, many=True).data
                     dic = SqlDictionary.objects.all().values('Name')
                     dic.query.distinct = ['Name']
@@ -48,7 +48,7 @@ class addressing(baseview.BaseView):
                     if permission_spec['query'] == '1':
                         # 过滤
                         for i in permission_spec['querycon']:
-                            con_instance = DatabaseList.objects.filter(connection_name=i).first()
+                            con_instance = DatabaseList.objects.filter(connection_name=i, delete_yn=1).first()
                             if con_instance:
                                 serial_db = DBlist(con_instance)
                                 con_name.append(serial_db.data)
@@ -58,7 +58,7 @@ class addressing(baseview.BaseView):
                     con_name = []
                     _type = request.data['permissions_type'] + 'con'
                     for i in permission_spec[_type]:
-                        con_instance = DatabaseList.objects.filter(connection_name=i).first()
+                        con_instance = DatabaseList.objects.filter(connection_name=i, delete_yn=1).first()
                         if con_instance:
                             serial_db = DBlist(con_instance)
                             con_name.append(serial_db.data)
