@@ -150,20 +150,20 @@ class order_push_message(threading.Thread):
             detail = DatabaseList.objects.filter(id=self.order.bundle_id).first()
             _inception = detail.get_inception(database = self.order.basename)
             with _inception as f:
-                try:
-                    f.Execute(sql=self.order.sql)
-                except PostgresError as e:
-                    SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
+                res = f.Execute(sql=self.order.sql, backup=self.order.backup)
+                for i in res:
+                    if i['errlevel'] not in [0, 1]:
+                        SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
                     SqlRecord.objects.get_or_create(
-                        state="Execute Error",
-                        sql=self.order.sql,
-                        error=str(e),
+                        state=i['stagestatus'],
+                        sql=i['sql'],
+                        error=i['errormessage'],
                         workid=self.order.work_id,
-                        affectrow=0,
-                        sequence='',
-                        execute_time=None,
-                        backup_dbname='',
-                        SQLSHA1='',
+                        affectrow=i['affected_rows'],
+                        sequence=i['sequence'],
+                        execute_time=i['execute_time'],
+                        SQLSHA1=i['SQLSHA1'],
+                        backup_dbname=i['backup_dbname']
                     )
         except Exception as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}--SQL执行失败: {e}')

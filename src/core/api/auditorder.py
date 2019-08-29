@@ -172,7 +172,6 @@ class audit(baseview.BaseView):
                     with _Inception as test:
                         res = test.Check(sql=order.sql)
                         return Response({'result': res, 'status': 200})
-                    _inception = data.get_inception()
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                     return Response({'status': '请检查inception信息是否正确!'})

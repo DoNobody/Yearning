@@ -17,6 +17,8 @@ import ast
 import psycopg2
 import psycopg2.extras
 
+from datetime import datetime
+
 pymysql.install_as_MySQLdb()
 
 
@@ -202,12 +204,39 @@ class PostgreIncetion(Inception):
     def Execute(self, sql=None, *args, **kwargs):
         self.cursor = self.con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
         with self.cursor as cursor:
+            result = []
             try:
-                sqllist =[ item for item in sql.split(';') if not item.startswith('--')]
-                sqllist = ';'.join(sqllist)
-                cursor.execute(sqllist)
+                sqllist =[ item for item in sql.split(';') if not item.strip().startswith('--')]
+                for idx, sql in enumerate(sqllist):
+                    tmp_result = {
+                        'ID': idx,
+                        'stage': '',
+                        'errlevel': 0,
+                        'stagestatus': "Execute Successfully",
+                        'errormessage': "",
+                        'sql': sql,
+                        'affected_rows': 0,
+                        'sequence': "",
+                        'backup_dbname': "",
+                        'execute_time': str(datetime.now()),
+                        'SQLSHA1': ""
+                    }
+                    try:
+                        cursor.execute(sql)
+                        tmp_result['stage'] = cursor.statusmessage
+                        tmp_result['affected_rows'] = cursor.rowcount
+                        tmp_result['sql'] = cursor.query
+                        result.append(tmp_result)
+                    except psycopg2.Error as e:
+                        [ item.update({'stagestatus':'Execute RollBack'}) for item in result]
+                        tmp_result.update({'errlevel': 2, 'stagestatus': "Execute Error", 'errormessage': str(e)})
+                        result.append(tmp_result)
+                        cursor.close()
+                        self.con.rollback()
+                        return result
                 self.con.commit()
-            except psycopg2.Error as e:
+                return result
+            except Exception as e:
                 self.con.rollback()
                 raise e
     
