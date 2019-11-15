@@ -110,7 +110,7 @@ class search(baseview.BaseView):
             try:
                 with _conn as f:
                     if delaytime and conn.dbtype == 'mysql' and conn.is_slave:
-                        data_set = f.execute(sql='show slave status')
+                        data_set = f.search(sql='show slave status')
                     else:
                         data_set = f.desc_table(table)
                 return Response(data_set)
