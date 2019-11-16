@@ -361,17 +361,20 @@ def push_message(message=None, type=None, user=None, to_addr=None, work_id=None,
 class Query_order(baseview.BaseView):
 
     def get(self, request, args: str = None):
-        page = request.GET.get('page')
-        page_size = request.GET.get('page_size', 10)
-        if request.user.group == "admin":
+        page = int(request.GET.get('page'))
+        page_size = int(request.GET.get('page_size', 10))
+        query_type = request.GET.get('type','0')
+        if query_type == '1':
+            sql_str = Q(delete_yn=1)&Q(username=request.user.username)
+        elif request.user.group == "admin":
             sql_str = Q()&Q(delete_yn=1)
         elif request.user.group == "manager":
             sql_str = Q(delete_yn=1)&(Q(audit=request.user.username) | Q(username=request.user.username))
         else:
             sql_str = Q(delete_yn=1)&Q(username=request.user.username)
         pn = query_order.objects.filter(sql_str).count()
-        start = (int(page) -1) * page_size
-        end = int(page) * page_size
+        start = (page -1) * page_size
+        end = page * page_size
         user_list = query_order.objects.filter(sql_str).all().order_by('-id')[start:end]
         serializers = Query_review(user_list, many=True)
         return Response({'data': serializers.data, 'pn': pn})

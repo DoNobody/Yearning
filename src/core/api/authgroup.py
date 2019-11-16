@@ -32,9 +32,12 @@ class auth_group(baseview.BaseView):
                         end = int(page) * 10
                         queryset = grained.objects.order_by('-id').all()[start:end]
                         ser = []
+                        account_info = Account.objects.all()
+                        # 获取权限名与用户列表的字典。
+                        auth_group_dict = util.build_auth_group_user_dict(account_info)
                         for i in queryset:
                             ser.append(
-                                {'id': i.id, 'username': i.username, 'permissions': i.permissions})
+                                {'id': i.id, 'username': i.username, 'permissions': i.permissions, 'accounts': auth_group_dict.get(i.username, [])})
                         return Response({'page': page_number, 'data': ser})
                     except Exception as e:
                         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')

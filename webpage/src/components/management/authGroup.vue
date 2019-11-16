@@ -158,6 +158,11 @@
               <Radio label="0">否</Radio>
             </RadioGroup>
           </FormItem>
+          <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
+          <br>
+          <FormItem label="当前包含用户：">
+            <Tag color="blue" v-for="i in accounts" :key="i">{{i}}</Tag>
+          </FormItem>
         </template>
       </Form>
       <div slot="footer">
@@ -208,6 +213,7 @@
     name: 'auth-group',
     data () {
       return {
+        accounts: '',
         authgroup: '',
         confirmgroup: '',
         deluserModal: false,
@@ -301,6 +307,7 @@
         this.id = vl.id
         this.addAuthGroupForm.groupname = vl.username
         this.permission = vl.permissions
+        this.accounts = vl.accounts
       },
       createModel () {
         this.addAuthGroupModal = true

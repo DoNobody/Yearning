@@ -49,7 +49,7 @@
                   <b>秒</b>
                 </span>
               </div>
-              <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查询权限</Button>
+              <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查看查询权限</Button>
               <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" @on-select="getSelect"  value="请输入SQL"></editor>
             </Card>
           </Row>

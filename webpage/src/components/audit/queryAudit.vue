@@ -16,7 +16,7 @@
             >
               <Button type="text" style="margin-left: -1%">删除记录</Button>
             </Poptip>
-            <Table border :columns="permissoncolums" :data="query_info" stripe ref="selection"
+            <Table border :columns="permissoncolums" :data="query_info_origin|tablefilter(searchkeyLazy)" stripe ref="selection"
                    @on-selection-change="delrecordList"></Table>
             <br>
             <Page :total="per_pn" show-elevator @on-change="permisson_list" :page-size="20" ref="perpage"></Page>
@@ -68,7 +68,6 @@
     name: 'Query_audit',
     data () {
       return {
-        query_info: [],
         query_info_origin: [],
         permissoncolums: [
           {
@@ -204,7 +203,8 @@
         delrecord: [],
         editInfodModal: false,
         query: {},
-        searchkey: ''
+        searchkey: '',
+        searchkeyLazy: ''
       }
     },
     methods: {
@@ -212,7 +212,6 @@
         axios.get(`${util.url}/query_order?page=${vl}`)
           .then(res => {
             this.query_info_origin = res.data['data']
-            this.query_info = JSON.parse(JSON.stringify(this.query_info_origin))
             this.per_pn = res.data['pn']
           })
           .catch(error => {
@@ -280,16 +279,21 @@
     },
     watch: {
       searchkey: function () {
-        this.lazy_query_info()
+        this.lazy_query_key()
       }
     },
     mounted () {
       this.permisson_list()
     },
     created () {
-      this.lazy_query_info = util._.debounce(() => {
-        this.query_info = util.tableSearch(this.query_info_origin, this.searchkey)
+      this.lazy_query_key = util._.debounce(() => {
+        this.searchkeyLazy = this.searchkey
       }, 500)
+    },
+    filters: {
+      tablefilter: function (val, searchkeyLazy) {
+        return util.tableSearch(val, searchkeyLazy)
+      }
     }
   }
 </script>

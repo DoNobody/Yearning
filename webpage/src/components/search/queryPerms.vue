@@ -195,7 +195,7 @@
     },
     methods: {
       permisson_list (vl = 1) {
-        axios.get(`${util.url}/query_order?page=${vl}`)
+        axios.get(`${util.url}/query_order?page=${vl}&page_size=100&type=1`)
           .then(res => {
             this.query_info = res.data['data'].filter(item => (item.query_per === 1 || item.query_per === 2))
             this.per_pn = res.data['pn']

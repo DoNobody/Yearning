@@ -204,3 +204,17 @@ def init_conf():
 
     return res[0]
 
+def build_auth_group_user_dict(user_object_list):
+    result = {}
+    for user in user_object_list:
+        if user.auth_group:
+            auth_list = user.auth_group.split(',')
+            for auth_ in auth_list:
+                if auth_ in result:
+                    if user.username in result[auth_]:
+                        pass
+                    else:
+                        result[auth_].append(user.username)
+                else:
+                    result.update({auth_:[user.username]})
+    return result

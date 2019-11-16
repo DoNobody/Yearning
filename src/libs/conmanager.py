@@ -74,7 +74,9 @@ class MysqlOpter(DbOpter):
             db=self.db,
             charset='utf8mb4',
             port=self.port,
-            connect_timeout=5, 
+            connect_timeout=5,
+            read_timeout = 30,
+            write_timeout = 30,
             **self.conn_kwargs
         )
         return self
