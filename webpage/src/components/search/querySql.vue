@@ -310,6 +310,7 @@
                 })
                 this.total = res.data['len']
                 this.filtertablekey = ''
+                this.splice_arr(1)
               }
               this.$Spin.hide()
             }).catch(error => {
