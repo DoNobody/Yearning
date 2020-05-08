@@ -38,7 +38,7 @@ def dingding(content: str = None, url: str = None):
     headers = {"Content-Type": "application/json"}
     req = request.Request(url, headers=headers)
     context = ssl._create_unverified_context()
-    request.urlopen(req, data=binary_data, context=context).read()
+    request.urlopen(req, data=binary_data, context=context, timeout= 2).read()
 
 
 def date() -> str:

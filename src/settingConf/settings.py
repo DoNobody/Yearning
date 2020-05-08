@@ -120,6 +120,11 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000000),
 }
 
+
+DINGDING_ERROR_URL = "https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -153,11 +158,16 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'standard'
-        }
+        },
+        'dingError': {
+            'level': 'DEBUG',
+            'class': 'libs.custorm_logging_handler.DingdingErrorHandler',
+            'formatter': 'standard'
+        }, 
     },
     'loggers': {
         'Yearning.core.views': {
-            'handlers': ['error', 'console'],
+            'handlers': ['error', 'console','dingError'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True
         }
