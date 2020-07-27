@@ -54,7 +54,14 @@
             </Card>
           </Row>
           <Row>
-            <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if="allsearchdata && allsearchdata.length"></Input>
+            <Col span="4">
+              <Button type="warning" @click.native="history_sql()" v-if = "put_info.base">当前连接 历史查询记录</Button>
+            </Col>
+            <Col span="20">
+              <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if = "allsearchdata && allsearchdata.length"></Input>
+            </Col>
+          </Row>
+          <Row>
             <Table :columns="columnsName"
               :data="allsearchdata_filtered.slice((page - 1) * splice_length, page * splice_length)"
               highlight-row
@@ -360,6 +367,31 @@
         } else {
           this.formItem.selectContent = ''
         }
+      },
+      history_sql () {
+        axios.post(`${util.url}/query_history`, {
+            'dbcon': this.put_info.dbcon
+          }).then(res => {
+              if (!res.data['data']) {
+                util.err_notice(res.data)
+              } else {
+                this.allsearchdata = res.data['data']
+                this.allsearchdata_filtered = JSON.parse(JSON.stringify(this.allsearchdata))
+                let dataFirst = this.allsearchdata[0]
+                let dataWidth = {}
+                for (let item in dataFirst) {
+                  if ((dataFirst[item] + '').length > 30) {
+                    dataWidth[item] = 260
+                  }
+                }
+                this.columnsName = [{'title': '查询语句', 'key': 'statements'},
+                                    {'title': '查询时间', 'key': 'updatetime'}]
+                this.filtertablekey = ''
+                this.splice_arr(1)
+              }
+            }).catch(error => {
+              util.err_notice(error)
+            })
       }
     },
     mounted () {

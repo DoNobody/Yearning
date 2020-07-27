@@ -36,7 +36,7 @@ from core.api.applygrained import (
     apply_grained
 )
 from core.api.sqlorder import sqlorder
-from core.api.serachsql import search, query_worklf, Query_order
+from core.api.serachsql import search, query_worklf, query_order_search, query_history
 from core.api.osc import osc_step
 from core.api.myorder import order
 from core.api.gensql import gen_sql
@@ -47,8 +47,9 @@ from core.api.authgroup import *
 urlpatterns = [
     url(r'^api/v1/authgroup/(.*)', auth_group.as_view()),
     url(r'^api/v1/setting/(.*)', setting_view.as_view()),
-    url(r'^api/v1/query_order', Query_order.as_view()),
+    url(r'^api/v1/query_order', query_order_search.as_view()),
     url(r'^api/v1/query_worklf', query_worklf.as_view()),
+    url(r"^api/v1/query_history", query_history.as_view()),
     url(r'^api/v1/userinfo/(.*)', userinfo.as_view()),
     url(r'^api/v1/loginregister/(.*)', login_register.as_view()),
     url(r'^api/v1/audit_grained/(.*)', audit_grained.as_view()),

@@ -358,7 +358,7 @@ def push_message(message=None, type=None, user=None, to_addr=None, work_id=None,
         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
 
 
-class Query_order(baseview.BaseView):
+class query_order_search(baseview.BaseView):
 
     def get(self, request, args: str = None):
         page = int(request.GET.get('page'))
@@ -388,3 +388,19 @@ class Query_order(baseview.BaseView):
             for i in work_id_list:
                 query_order.objects.filter(Q(work_id=i) & (Q(username=request.user.username) | Q(audit=request.user.username))).update(delete_yn=0)
         return Response('申请记录已删除!')
+
+class query_history(baseview.BaseView):
+
+    def post(self, request, args: str = None):
+        un_init = util.init_conf()
+        limit = ast.literal_eval(un_init['other'])
+        dbcon = request.data.get('dbcon', "None")
+        query_order_item = query_order.objects.filter(username=request.user, connection_name=dbcon, query_per=1).first()
+        if query_order_item:
+            result = querypermissions.objects.filter(
+                                work_id=query_order_item.work_id,
+                                username=request.user).order_by("-id")[:1000]
+            if result:
+                serializers = Query_list(result, many=True)
+                return Response({'data': serializers.data})
+        return Response({'error': '当前连接无历史查询记录'})
