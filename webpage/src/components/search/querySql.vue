@@ -9,12 +9,36 @@
     overflow-x: scroll;
     height: 680px;
   }
+  .demo-split{
+      height: 800px;
+      border: 1px solid #dcdee2;
+  }
+  .demo-split-pane{
+      padding: 10px;
+  }
+  .demo-split-pane.no-padding{
+      height: 600px;
+      padding: 0;
+  }
+  .ivu-card-body{
+    height: calc(100% - 28px) !important;
+    padding-top: 0;
+  }
+  .ivu-card-body-box{
+    height: 100%;
+  }
+  .ivu-card-bordered{
+    height: 100%;
+  }
+  .ivu-page {
+    padding-left: 30px;
+  }
 </style>
 
 <template>
-  <div>
-    <Row>
-      <Col span="4">
+  <div class="demo-split">
+    <Split v-model="split1" mode="horizontal" min="200px" max="1200px"> 
+      <div slot="left" class="demo-split-pane">
         <Card>
           <div>
             <Icon type="ios-search"></Icon>
@@ -29,50 +53,54 @@
             </div>
           </div>
         </Card>
-      </Col>
-      <Col span="20" class="padding-left-10">
-          <Row>
-            <Card>
-              <div slot="title">
-                <Button type="error" icon="md-trash" @click.native="ClearForm()">清除</Button>
-                <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
-                <Button v-if="formItem.selectContent" type="success" icon="ios-redo" @click.native="Search_sql()">
-                  查询已选择</Button>
-                <Button v-else type="success" icon="ios-redo" @click.native="Search_sql()">查询</Button>
-                <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" v-if="put_info.export_data">导出查询数据</Button>
-                <span v-if = "put_info.base">
-                  <b>当前选择的库:</b>
-                  <span>{{put_info.dbcon}} . {{put_info.base}}</span>
-                  <b>延时:</b>
-                  <span v-if="put_info.slave_delay > 0" style="background-color:red;">{{ put_info.slave_delay }}</span>
-                  <span v-else>{{ put_info.slave_delay }}</span>
-                  <b>秒</b>
-                </span>
-              </div>
-              <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查看查询权限</Button>
-              <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" @on-select="getSelect"  value="请输入SQL"></editor>
-            </Card>
-          </Row>
-          <Row>
-            <Col span="4">
-              <Button type="warning" @click.native="history_sql()" v-if = "put_info.base">当前连接 历史查询记录</Button>
-            </Col>
-            <Col span="20">
-              <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if = "allsearchdata && allsearchdata.length"></Input>
-            </Col>
-          </Row>
-          <Row>
-            <Table :columns="columnsName"
-              :data="allsearchdata_filtered.slice((page - 1) * splice_length, page * splice_length)"
-              highlight-row
-              ref="table"
-              no-data-text="请输入SQL"
-              border
-              ></Table>
-            <Page :total="total" show-total show-sizer @on-change="splice_arr" @on-page-size-change="splice_len"  ref="pager"></Page>
-          </Row>
-      </Col>
-    </Row>
+      </div>
+      <div slot="right" class="demo-split-pane no-padding">
+        <Split v-model="split2" mode="vertical" @on-move-end="splitresize" min="200px" max="300px">
+          <div slot="top" class="ivu-card-body-box" >
+              <Card>
+                <div slot="title">
+                  <Button type="error" icon="md-trash" @click.native="ClearForm()">清除</Button>
+                  <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
+                  <Button v-if="formItem.selectContent" type="success" icon="ios-redo" @click.native="Search_sql()">
+                    查询已选择</Button>
+                  <Button v-else type="success" icon="ios-redo" @click.native="Search_sql()">查询</Button>
+                  <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" v-if="put_info.export_data">导出查询数据</Button>
+                  <span v-if = "put_info.base">
+                    <b>当前选择的库:</b>
+                    <span>{{put_info.dbcon}} . {{put_info.base}}</span>
+                    <b>延时:</b>
+                    <span v-if="put_info.slave_delay > 0" style="background-color:red;">{{ put_info.slave_delay }}</span>
+                    <span v-else>{{ put_info.slave_delay }}</span>
+                    <b>秒</b>
+                  </span>
+                </div>
+                <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查看查询权限</Button>
+                <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" @on-select="getSelect"  value="请输入SQL" ref="myeditor"></editor>
+              </Card>
+          </div>
+          <div slot="bottom">
+            <Row>
+              <Col span="4">
+                <Button type="warning" @click.native="history_sql()" v-if = "put_info.base">当前连接 历史查询记录</Button>
+              </Col>
+              <Col span="20">
+                <Input type="text" icon="search" v-model="filtertablekey" placeholder="过滤表格..." v-if = "allsearchdata && allsearchdata.length"></Input>
+              </Col>
+            </Row>
+            <Row>
+              <Table :columns="columnsName"
+                :data="allsearchdata_filtered.slice((page - 1) * splice_length, page * splice_length)"
+                highlight-row
+                ref="table"
+                no-data-text="请输入SQL"
+                border
+                ></Table>
+              <Page :total="total" show-total show-sizer @on-change="splice_arr" @on-page-size-change="splice_len"  ref="pager"></Page>
+            </Row>
+          </div>
+        </Split>
+      </div>
+    </Split>
   </div>
 </template>
 <script>
@@ -118,6 +146,8 @@
     name: 'SearchSQL',
     data () {
       return {
+        split1: 0.2,
+        split2: 0.3,
         data1: [],
         validate_gen: true,
         formItem: {
@@ -392,6 +422,10 @@
             }).catch(error => {
               util.err_notice(error)
             })
+      },
+      splitresize () {
+        this.$refs.myeditor.parent_resize()
+        console.info('I am resized')
       }
     },
     mounted () {

@@ -1,6 +1,15 @@
 <!-- thanks by wangjianhui2464-->
+<style lang="less">
+ 
+  .ace_editor{
+    height: 100% !important;
+  }
+  .ace-xcode{
+    height: 100%;
+  }
+</style>
 <template>
-  <div style="width: 100%;height: 200px"></div>
+  <div style="width: 100%;height: 100%"></div>
 </template>
 
 <script>
@@ -34,6 +43,11 @@
       },
       lang: function (newLang) {
         this.editor.getSession().setMode('ace/mode/' + newLang)
+      }
+    },
+    methods: {
+      parent_resize () {
+        this.editor.resize()
       }
     },
     mounted () {
