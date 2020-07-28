@@ -29,9 +29,9 @@
             </FormItem>
             <FormItem label="角色" prop="group">
               <Select v-model="userinfo.group" placeholder="请选择">
-                <Option value="admin">管理员</Option>
-                <Option value="manager" v-if="multi">审核人员</Option>
-                <Option value="perform">使用人</Option>
+                <Option value="admin" key="admin">管理员</Option>
+                <Option value="manager" key="manager" v-if="multi">审核人员</Option>
+                <Option value="perform" key="perform" >使用人</Option>
               </Select>
             </FormItem>
             <FormItem label="电子邮箱" prop="email">
@@ -39,7 +39,7 @@
             </FormItem>
             <FormItem label="权限组">
               <Select v-model="userinfo.authgroup" placeholder="请选择" multiple>
-                <Option v-for="list in groupset" :value="list" :key="list">{{ list }}</Option>
+                <Option v-for="list in groupset" :value="list.key" :key="list.key">{{ list.label }}</Option>
               </Select>
             </FormItem>
             <Button type="primary" @click.native="Registered" style="margin-left: 35%" :loading="loading">注册</Button>
@@ -102,9 +102,7 @@
           <Input v-model="editAuthForm.department" placeholder="请输入新部门"></Input>
         </FormItem>
         <FormItem label="权限组" prop="authgroup">
-          <Select v-model="editAuthForm.authgroup" multiple @on-change="getgrouplist" placeholder="请选择" :disabled="groupDisabled && editAuthForm.group === 'admin'">
-            <Option v-for="list in groupset" :value="list" :key="list">{{ list }}</Option>
-          </Select>
+          <Transfer :data="groupset" :target-keys="editAuthForm.authgroup" @on-change="transferChange" :disabled="groupDisabled && editAuthForm.group === 'admin'"></Transfer>
           <template>
             <FormItem>
               <Divider orientation="left">DDL权限</Divider>
@@ -570,10 +568,19 @@
         this.editAuthModal = false
         this.editAuthForm.authgroup = []
       },
+      transferChange (newTargetKeys, direction, moveKeys) {
+        this.editAuthForm.authgroup = newTargetKeys;
+        this.getgrouplist()
+      },
       getauthgroup () {
         axios.get(`${util.url}/authgroup/group_name`)
           .then(res => {
-            this.groupset = res.data.authgroup
+            for (let item in res.data.authgroup) {
+              this.groupset.push({
+                key: res.data.authgroup[item],
+                label: res.data.authgroup[item]
+              })
+            }
             this.multi = res.data.multi
           })
           .catch(error => {
