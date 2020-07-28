@@ -27,7 +27,13 @@
     <Modal v-model="editInfodModal" :width="800">
       <h3 slot="header" style="color:#2D8CF0">权限申请单</h3>
       <Form :label-width="120" label-position="right">
-        <FormItem label="权限组:">
+        <FormItem label="添加权限:">
+          <p>{{add_groups}}</p>
+        </FormItem>
+        <FormItem label="删除权限:">
+          <p>{{del_groups}}</p>
+        </FormItem>
+        <FormItem label="更新后权限组:">
           <p>{{auth_group}}</p>
         </FormItem>
         <template>
@@ -224,6 +230,8 @@
         user: '',
         work_id: '',
         auth_group: '',
+        del_groups: '',
+        add_groups: '',
         status: 9
       }
     },
@@ -258,6 +266,8 @@
         this.work_id = vl.work_id
         this.auth_group = vl.auth_group
         this.status = vl.status
+        this.add_groups = vl.add_groups
+        this.del_groups = vl.del_groups
       },
       savedata () {
         axios.post(`${util.url}/audit_grained/`,
