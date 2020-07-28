@@ -158,13 +158,12 @@ def auth(username, password):
         user=user,
         password=LDAP_ADMIN_PASS)
     ret = c.bind()
-    if ret:
-        if ldap['ou']:
+    if ret and ldap['ou']:
             res = c.search(
                 search_base=SEARCH_BASE,
                 search_filter='(cn={})'.format(username),
                 search_scope=SUBTREE,
-                attributes=['cn', 'uid', 'mail'],
+                attributes=['cn', 'uid', 'mail', 'displayName'],
             )
             if res:
                 entry = c.response[0]
@@ -177,20 +176,12 @@ def auth(username, password):
                                        check_names=True, lazy=False, raise_exceptions=False)
                     conn2.bind()
                     if conn2.result["description"] == "success":
-                        print((True, attr_dict["mail"], attr_dict["cn"], attr_dict["uid"]))
                         c.unbind()
                         conn2.unbind()
-                        return True
-                    else:
-                        print("auth fail")
-                        return False
+                        return attr_dict
                 except:
-                    print("auth fail")
-                    return False
-        else:
-            return True
-    else:
-        return False
+                    pass
+    return None
 
 
 def init_conf():

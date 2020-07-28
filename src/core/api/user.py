@@ -228,7 +228,8 @@ class ldapauth(baseview.AnyLogin):
                         username=username,
                         is_staff=0,
                         group='perform',
-                        from_ldap=1)
+                        from_ldap=1,
+                        real_name=valite.get('displayName',username))
                     user.save()
                     token = jwt_encode_handler(jwt_payload_handler(user))
                     return Response({'token': token, 'res': '', 'permissions': 'perform'})
