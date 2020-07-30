@@ -24,7 +24,7 @@ class audit_grained(baseview.SuperUserpermissions):
             user_list = applygrained.objects.all().order_by('-id')[start:end]
             ser = []
             for i in user_list:
-                c_group = Account.objects.filter(username=i.username).first().group
+                c_group = Account.objects.filter(username=i.username).first().auth_group
                 c_groups = set(c_group.split(','))
                 u_groups = set(i.auth_group.split(','))
                 delete_groups = ",".join(list(c_groups.difference(u_groups)))

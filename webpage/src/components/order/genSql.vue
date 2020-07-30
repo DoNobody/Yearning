@@ -70,7 +70,7 @@
               <TabPane label="手动模式" name="order1" icon="md-code">
                 <Form>
                   <FormItem>
-                    <editor v-model="formDynamic" @init="editorInit" @setCompletions="setCompletions"></editor>
+                    <editor v-model="formDynamic" @init="editorInit" @setCompletions="setCompletions" style="min-height: 250px !important;"></editor>
                   </FormItem>
                   <FormItem>
                     <Table :columns="columnsName" :data="Testresults" highlight-row></Table>

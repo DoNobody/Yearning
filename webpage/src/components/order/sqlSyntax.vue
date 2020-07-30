@@ -98,7 +98,7 @@
             <Icon type="ios-crop"></Icon>
             填写sql语句
           </p>
-          <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions"></editor>
+          <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" style="min-height: 250px !important;"></editor>
           <br>
           <br>
           <Table :columns="columnsName" :data="Testresults" highlight-row></Table>

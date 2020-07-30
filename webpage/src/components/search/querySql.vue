@@ -55,7 +55,7 @@
         </Card>
       </div>
       <div slot="right" class="demo-split-pane no-padding">
-        <Split v-model="split2" mode="vertical" @on-move-end="splitresize" min="200px" max="300px">
+        <Split v-model="split2" mode="vertical" @on-move-end="splitresize" min="200px">
           <div slot="top" class="ivu-card-body-box" >
               <Card>
                 <div slot="title">
@@ -64,7 +64,7 @@
                   <Button v-if="formItem.selectContent" type="success" icon="ios-redo" @click.native="Search_sql()">
                     查询已选择</Button>
                   <Button v-else type="success" icon="ios-redo" @click.native="Search_sql()">查询</Button>
-                  <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" v-if="put_info.export_data">导出查询数据</Button>
+                  <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" ghost>导出查询数据</Button>
                   <span v-if = "put_info.base">
                     <b>当前选择的库:</b>
                     <span>{{put_info.dbcon}} . {{put_info.base}}</span>
@@ -147,7 +147,7 @@
     data () {
       return {
         split1: 0.2,
-        split2: 0.3,
+        split2: '200px',
         data1: [],
         validate_gen: true,
         formItem: {
@@ -359,7 +359,9 @@
         }
       },
       exportdata () {
-        if (this.put_info.dbcon && this.put_info.base && this.allsearchdata.length) {
+        if (!this.put_info.export_data) {
+            util.err_notice('无数据导出权限，点击"右侧查看权限"进行权限添加')
+        } else if (this.put_info.dbcon && this.put_info.base && this.allsearchdata.length) {
           exportcsv({
             filename: this.put_info.dbcon + '-' + this.put_info.base + '-' + this.put_info.tablename + '-' + (new Date()).valueOf(),
             original: false,
@@ -403,7 +405,7 @@
             'dbcon': this.put_info.dbcon
           }).then(res => {
               if (!res.data['data']) {
-                util.err_notice(res.data)
+                util.err_notice(res.data['error'])
               } else {
                 this.allsearchdata = res.data['data']
                 this.allsearchdata_filtered = JSON.parse(JSON.stringify(this.allsearchdata))
@@ -417,6 +419,7 @@
                 this.columnsName = [{'title': '查询语句', 'key': 'statements'},
                                     {'title': '查询时间', 'key': 'updatetime'}]
                 this.filtertablekey = ''
+                this.total = this.allsearchdata.length
                 this.splice_arr(1)
               }
             }).catch(error => {

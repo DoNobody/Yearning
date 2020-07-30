@@ -391,6 +391,7 @@
       ApplyForPermission () {
         this.editInfoModal = true
         this.editAuthForm.authgroup = this.userForm.auth_group.split(',')
+        this.getgrouplist()
       },
       ddlCheckAll (name, indeterminate, ty) {
         if (this.indeterminate[indeterminate]) {

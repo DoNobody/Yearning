@@ -36,8 +36,7 @@
         <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
         <br>
         <FormItem label="导出数据:">
-          <p v-if="query.export === 1">是</p>
-          <p v-else>否</p>
+          <p>{{query.export}}</p>
         </FormItem>
         <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
         <br>
@@ -78,6 +77,10 @@
           {
             title: '数据库连接名称',
             key: 'connection_name'
+          },
+          {
+            title: '导出权限',
+            key: 'export'
           },
           {
             title: '状态',
@@ -197,7 +200,16 @@
       permisson_list (vl = 1) {
         axios.get(`${util.url}/query_order?page=${vl}&page_size=100&type=1`)
           .then(res => {
-            this.query_info = res.data['data'].filter(item => (item.query_per === 1 || item.query_per === 2))
+            this.query_info = res.data['data']
+              .filter(item => (item.query_per === 1 || item.query_per === 2))
+              .map(function (d) {
+                if (d.export === 1) {
+                  d.export = '有'
+                } else {
+                  d.export = '无(如需要,请"中止查询"后再次申请)'
+                }
+                return d
+              })
             this.per_pn = res.data['pn']
           })
           .catch(error => {

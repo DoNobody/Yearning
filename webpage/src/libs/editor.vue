@@ -2,14 +2,15 @@
 <style lang="less">
  
   .ace_editor{
-    height: 100% !important;
+    height: 100%;
+
   }
   .ace-xcode{
     height: 100%;
   }
 </style>
 <template>
-  <div style="width: 100%;height: 100%"></div>
+  <div style="width: 100%;height: 100%; min-height: 50px;"></div>
 </template>
 
 <script>

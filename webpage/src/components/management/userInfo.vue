@@ -602,6 +602,7 @@
         } else {
           this.editAuthForm.authgroup = []
         }
+        this.getgrouplist()
       },
       deleteUser (index) {
         let filterData5 = util.tableSearch(this.data5, this.searchkeyLazy)

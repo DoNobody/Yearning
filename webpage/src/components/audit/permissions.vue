@@ -43,7 +43,7 @@
           </FormItem>
           <template v-if="permission.ddl !== '0'">
             <FormItem label="连接名:">
-              <span v-for="i in permission.ddlcon" style="margin-left: 1%">{{i}}</span>
+              <Tag v-for="i in permission.ddlcon" style="margin-left: 1%">{{i}}</Tag>
             </FormItem>
           </template>
           <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
@@ -54,13 +54,13 @@
           </FormItem>
           <template v-if="permission.dml === '1'">
             <FormItem label="连接名:">
-              <span v-for="i in permission.dmlcon" style="margin-left: 1%">{{i}}</span>
+              <Tag v-for="i in permission.dmlcon" style="margin-left: 1%">{{i}}</Tag>
             </FormItem>
           </template>
           <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
           <br>
           <FormItem label="上级审核人范围:">
-            <span v-for="i in permission.person" style="margin-left: 1%">{{i}}</span>
+            <Tag v-for="i in permission.person" style="margin-left: 1%">{{i}}</Tag>
           </FormItem>
           <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
           <br>
@@ -70,7 +70,7 @@
           </FormItem>
           <template v-if="permission.query === '1'">
             <FormItem label="连接名:">
-              <span v-for="i in permission.querycon" style="margin-left: 1%">{{i}}</span>
+              <Tag v-for="i in permission.querycon" style="margin-left: 1%">{{i}}</Tag>
             </FormItem>
           </template>
           <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
@@ -89,7 +89,7 @@
               <p v-else>是</p>
             </FormItem>
             <FormItem label="连接名:">
-              <span v-for="i in permission.diccon" style="margin-left: 1%">{{i}}</span>
+              <Tag v-for="i in permission.diccon" style="margin-left: 1%">{{i}}</Tag>
             </FormItem>
           </template>
         </template>
