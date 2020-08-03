@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  goinception:
+    container_name: goinception
+    image: hanchuanchuan/goinception:v1.2.3
+    ports:
+      - 4000:4000
+    volumes:
+      - ./config.toml:/etc/config.toml
+    network_mode: bridge
+    restart: always

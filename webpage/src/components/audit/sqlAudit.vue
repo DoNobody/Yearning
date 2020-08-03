@@ -157,7 +157,9 @@
       <Form>
         <FormItem label="SQL语句SHA1值">
           <Select v-model="oscsha1" style="width:70%" @on-change="oscsetp" transfer>
-            <Option v-for="item in osclist" :value="item.SQLSHA1" :key="item.SQLSHA1">{{ item.SQLSHA1 }}</Option>
+            <div v-if="osclist">
+              <Option v-for="item in osclist" :value="item.SQLSHA1" :key="item.SQLSHA1">{{ item.SQLSHA1 }}</Option>
+            </div>
           </Select>
         </FormItem>
         <FormItem label="osc进度详情图表">
@@ -551,15 +553,17 @@
         })
           .then(res => {
             if (res.data.status === 200) {
-              let osclist
+              let osclist = []
               this.dataId = res.data.result
-              osclist = this.dataId.filter(vl => {
-                if (vl.SQLSHA1 !== '') {
-                  return vl
-                }
-              })
-              this.osclist = osclist
-              this.summit = false
+              if (this.dataId) {
+                osclist = this.dataId.filter(vl => {
+                  if (vl.SQLSHA1 !== '') {
+                    return vl
+                  }
+                })
+                this.osclist = osclist
+                this.summit = false
+              }
               sessionStorage.setItem('osc', JSON.stringify(osclist))
             } else {
               util.err_notice(res.data.status)
@@ -609,15 +613,22 @@
         this.callback_time = setInterval(function () {
           axios.get(`${util.url}/osc/${vl}`)
             .then(res => {
-              if (res.data[0].PERCENT === 99) {
-                vm.percent = 100
-                clearInterval(vm.callback_time)
+              if (res.data) {
+                if (res.data[0].PERCENT === 99) {
+                  vm.percent = 100
+                  clearInterval(vm.callback_time)
+                } else {
+                  vm.percent = res.data[0].PERCENT
+                }
+                vm.consuming = res.data[0].REMAINTIME
               } else {
-                vm.percent = res.data[0].PERCENT
+                clearInterval(vm.callback_time)
               }
-              vm.consuming = res.data[0].REMAINTIME
             })
-            .catch(error => console.log(error))
+            .catch(error => {
+              console.log(error)
+              clearInterval(vm.callback_time)
+            })
         }, 2000)
       },
       callback_method () {

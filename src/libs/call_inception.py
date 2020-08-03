@@ -63,7 +63,7 @@ class MysqlInception(Inception):
             Sql = Sql.rstrip(';')
         elif Sql[-1] == '；':
             Sql = Sql.rstrip('；')
-        if backup is not None and backup != 0:
+        if backup is not None and backup != '0':
             InceptionSQL = '''
              /*--user=%s;--password=%s;--host=%s;--port=%s;%s;%s;*/ \
              inception_magic_start;\
@@ -96,13 +96,13 @@ class MysqlInception(Inception):
             return InceptionSQL
 
     def Execute(self, sql, backup: int):
-        if backup == 1:
-            Inceptionsql = self.GenerateStatements(Sql=sql, Type='--enable-execute')
+        if backup == '1':
+            Inceptionsql = self.GenerateStatements(Sql=sql, Type='--execute=1')
         else:
             Inceptionsql = self.GenerateStatements(
                 Sql=sql,
-                Type='--enable-execute',
-                backup='--disable-remote-backup')
+                Type='--execute=1',
+                backup='--backup=1')
         with self.con.cursor() as cursor:
             cursor.execute(Inceptionsql)
             result = cursor.fetchall()

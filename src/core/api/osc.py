@@ -17,14 +17,11 @@ class osc_step(baseview.SuperUserpermissions):
         '''
 
         try:
-            with call_inception.Inception(LoginDic={
-                'host': '',
-                'user': '',
-                'password': '',
-                'db': '',
-                'port': ''
-            }) as f:
+            with call_inception.MysqlInception() as f:
                 data = f.oscstep(sql="inception get osc_percent '%s';" % args)
+                # 结果为空，说明已经执行完成了
+                if not data:
+                    data = [{'PERCENT': 99}]
                 return Response(data)
         except Exception as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')

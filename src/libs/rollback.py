@@ -15,7 +15,7 @@ def rollbackSQL(db=None, opid=None):
         data = f.query_info(
             sql=
             '''
-            select tablename from $_$Inception_backup_information$_$ where opid_time =%s;
+            select tablename from $_$Inception_backup_information$_$ where opid_time = '%s';
             ''' % opid)
         return data[0]
 
@@ -32,6 +32,6 @@ def roll(backdb=None, opid=None):
         data = f.query_info(
             sql=
             '''
-            select rollback_statement from %s where opid_time =%s;
+            select rollback_statement from %s where opid_time = '%s';
             ''' % (backdb, opid))
         return data
