@@ -39,7 +39,7 @@ log-rotate = true
 
 [inc]
 
-backup_host = "192.168.57.145"
+backup_host = "db"
 backup_port = 3306
 backup_user = "root"
 backup_password = "root"
