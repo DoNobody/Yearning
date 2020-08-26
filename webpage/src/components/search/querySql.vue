@@ -7,22 +7,28 @@
     word-break: break-all;
     overflow-y: scroll;
     overflow-x: scroll;
-    height: 680px;
+    height: 766px;
   }
   .demo-split{
       height: 800px;
       border: 1px solid #dcdee2;
   }
   .demo-split-pane{
-      padding: 10px;
-  }
-  .demo-split-pane.no-padding{
-      height: 600px;
+      height: 100%;
       padding: 0;
   }
+  .demo-split-pane.no-padding{
+      height: 100%;
+      padding: 0;
+  }
+  .ivu-card-head{
+    padding-bottom: 8px !important;
+    padding-top: 8px !important;
+  }
   .ivu-card-body{
-    height: calc(100% - 28px) !important;
-    padding-top: 0;
+    height: 100% !important;
+    padding: 0 !important;
+    padding-bottom: 44px !important;
   }
   .ivu-card-body-box{
     height: 100%;
@@ -31,13 +37,13 @@
     height: 100%;
   }
   .ivu-page {
-    padding-left: 30px;
+    padding-left: 2%;
   }
 </style>
 
 <template>
   <div class="demo-split">
-    <Split v-model="split1" mode="horizontal" min="200px" max="1200px"> 
+    <Split v-model="split1" mode="horizontal" @on-move-end="splitresize"> 
       <div slot="left" class="demo-split-pane">
         <Card>
           <div>
@@ -56,7 +62,7 @@
       </div>
       <div slot="right" class="demo-split-pane no-padding">
         <Split v-model="split2" mode="vertical" @on-move-end="splitresize" min="200px">
-          <div slot="top" class="ivu-card-body-box" >
+          <div slot="top" class="ivu-card-body-box" > 
               <Card>
                 <div slot="title">
                   <Button type="error" icon="md-trash" @click.native="ClearForm()">清除</Button>
@@ -147,7 +153,7 @@
     data () {
       return {
         split1: 0.2,
-        split2: '200px',
+        split2: 0.3,
         data1: [],
         validate_gen: true,
         formItem: {
@@ -427,8 +433,17 @@
             })
       },
       splitresize () {
+        if (this.split2 <= 0.2) {
+          this.split2 = 0.2
+        } else if (this.split2 >= 0.8) {
+          this.split2 = 0.8
+        }
+        if (this.split1 <= 0.2) {
+          this.split1 = 0.2
+        } else if (this.split1 >= 0.5) {
+          this.split1 = 0.5
+        }
         this.$refs.myeditor.parent_resize()
-        console.info('I am resized')
       }
     },
     mounted () {
