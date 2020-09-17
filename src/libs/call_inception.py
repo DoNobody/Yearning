@@ -20,7 +20,8 @@ import psycopg2.extras
 from datetime import datetime
 
 pymysql.install_as_MySQLdb()
-
+import logging
+CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
 
 class Inception(metaclass=ABCMeta):
@@ -63,7 +64,7 @@ class MysqlInception(Inception):
             Sql = Sql.rstrip(';')
         elif Sql[-1] == '；':
             Sql = Sql.rstrip('；')
-        if backup is not None and backup != '--backup=1':
+        if backup is not None:
             InceptionSQL = '''
              /*--user=%s;--password=%s;--host=%s;--port=%s;%s;%s;*/ \
              inception_magic_start;\
