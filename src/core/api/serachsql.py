@@ -68,10 +68,12 @@ class search(baseview.BaseView):
                     try:
                         if limit.get('limit').strip() == '':
                             CUSTOM_ERROR.error('未设置全局最大limit值，系统自动设置为1000')
-                            query_sql = replace_limit(check[-1].strip(), 1000)
+                            query_sql = replace_limit(check[-1].strip(), '1000')
                         else:
                             query_sql = replace_limit(check[-1].strip(), limit.get('limit'))
                         data_set = f.search(sql=query_sql)
+                        if data_set['data']:
+                            data_set['data'] = data_set['data'][0: int(limit.get('limit', '1000').strip())]
                     except Exception as e:
                         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                         return HttpResponse(e)
@@ -144,14 +146,23 @@ def replace_limit(sql, limit):
         c = re.search(r'\d.*', sql_re.group())
         if c is not None:
             if c.group().find(',') != -1:
-                length = c.group()[-2]
+                range_nums = c.group().strip().strip(';').split(',')
+                max_range = int(max(range_nums))
+                min_range = int(min(range_nums))
+                length = max_range - min_range
+                if int(length) <= int(limit):
+                    return sql
+                else:
+                    limit_str = 'limit {},{};'.format(min_range, min_range + int(limit))
+                    sql = re.sub(r'limit\s.*\d.*;', limit_str, sql)
+                    return sql
             else:
                 length = c.group().rstrip(';')
-        if int(length) <= int(limit):
-            return sql
-        else:
-            sql = re.sub(r'limit\s.*\d.*;', 'limit %s;' % limit, sql)
-            return sql
+                if int(length) <= int(limit):
+                    return sql
+                else:
+                    sql = re.sub(r'limit\s.*\d.*;', 'limit %s;' % limit, sql)
+                    return sql
     else:
         sql = sql.rstrip(';') + ' limit %s;' % limit
         return sql
