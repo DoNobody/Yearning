@@ -55,8 +55,8 @@ class MysqlInception(Inception):
                                    db='',
                                    charset="utf8",
                                    connect_timeout=5,
-                                   read_timeout = 30,
-                                   write_timeout = 30)
+                                   read_timeout = 28800,
+                                   write_timeout = 28800)
         return self
 
     def GenerateStatements(self, Sql: str = '', Type: str = '', backup=None):
