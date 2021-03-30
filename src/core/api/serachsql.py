@@ -31,9 +31,10 @@ def exclued_db_list():
 class DateEncoder(simplejson.JSONEncoder):  # 感谢的凉夜贡献
 
     def default(self, o):
-        if isinstance(o, datetime.datetime) or isinstance(o, datetime.date) or isinstance(o, datetime.time):
+        try:
+            return simplejson.JSONEncoder.default(self, o)
+        except TypeError:
             return o.__str__()
-        return simplejson.JSONEncoder.default(self, o)
 
 
 class search(baseview.BaseView):
