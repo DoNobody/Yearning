@@ -1,6 +1,6 @@
-FROM python:3.7.4-alpine3.9 
+FROM python:3.7.10-alpine3.12 
 
-RUN apk add --no-cache git musl-dev libffi-dev openssl-dev gcc libxml2-dev libxslt-dev libgcrypt-dev postgresql postgresql-dev
+RUN apk add --no-cache gcc g++ musl-dev python3-dev libffi-dev openssl-dev cargo git libxml2-dev libxslt-dev libgcrypt-dev libressl-dev postgresql postgresql-dev
 
 COPY src/requirements.txt /opt/Yearning/src/requirements.txt  
 

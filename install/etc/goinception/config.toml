@@ -48,7 +48,7 @@ backup_password = "root"
 check_autoincrement_datatype = true
 check_autoincrement_init_value = true
 
-check_column_default_value = true
+check_column_default_value = false
 
 check_index_prefix = true
 check_insert_field = true
@@ -56,7 +56,7 @@ check_insert_field = true
 check_table_comment = true
 check_column_comment = true
 
-check_timestamp_default = true
+check_timestamp_default = false
 
 enable_blob_type = true
 
@@ -73,11 +73,13 @@ merge_alter_table = true
 enable_column_charset = true
 enable_set_charset = true
 
+enable_set_collation = true
+
 # 运行json类型字段
 enable_json_type = true
 
 # 审核列类型变更
-check_column_type_change = true
+check_column_type_change = false
 
 # 表名/索引名前缀
 index_prefix = "idx_"
@@ -109,6 +111,8 @@ lang = "en-US"
 
 # 全量日志
 general_log = false
+
+enable_identifer_keyword = true
 
 [osc]
 
