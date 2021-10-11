@@ -24,15 +24,17 @@ class audit_grained(baseview.SuperUserpermissions):
             user_list = applygrained.objects.all().order_by('-id')[start:end]
             ser = []
             for i in user_list:
-                c_group = Account.objects.filter(username=i.username).first().auth_group
-                c_groups = set(c_group.split(','))
-                u_groups = set(i.auth_group.split(','))
-                delete_groups = ",".join(list(c_groups.difference(u_groups)))
-                add_groups = ",".join(list(u_groups.difference(c_groups)))
-                ser.append(
-                    {'work_id': i.work_id, 'status': i.status, 'username': i.username,
-                     'permissions': i.permissions, 'auth_group': i.auth_group, 'real_name': i.real_name,
-                     'del_groups':delete_groups,'add_groups':add_groups, 'cur_groups': c_group})
+                user = Account.objects.filter(username=i.username).first()
+                if user:
+                    c_group = user.auth_group
+                    c_groups = set(c_group.split(','))
+                    u_groups = set(i.auth_group.split(','))
+                    delete_groups = ",".join(list(c_groups.difference(u_groups)))
+                    add_groups = ",".join(list(u_groups.difference(c_groups)))
+                    ser.append(
+                        {'work_id': i.work_id, 'status': i.status, 'username': i.username,
+                        'permissions': i.permissions, 'auth_group': i.auth_group, 'real_name': i.real_name,
+                        'del_groups':delete_groups,'add_groups':add_groups, 'cur_groups': c_group})
             return Response({'data': ser, 'pn': pn})
 
         else:
