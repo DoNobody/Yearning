@@ -65,11 +65,10 @@
           <div slot="top" class="ivu-card-body-box" > 
               <Card>
                 <div slot="title">
-                  <Button type="error" icon="md-trash" @click.native="ClearForm()">清除</Button>
-                  <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
                   <Button v-if="formItem.selectContent" type="success" icon="ios-redo" @click.native="Search_sql()">
                     查询已选择</Button>
                   <Button v-else type="success" icon="ios-redo" @click.native="Search_sql()">查询</Button>
+                  <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
                   <Button type="primary" icon="ios-cloud-download" @click.native="exportdata()" ghost>导出查询数据</Button>
                   <span v-if = "put_info.base">
                     <b>当前选择的库:</b>
@@ -81,7 +80,7 @@
                   </span>
                 </div>
                 <Button type="primary" icon="md-add" @click.native="search_perm()" slot="extra">查看查询权限</Button>
-                <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" @on-select="getSelect"  value="请输入SQL" ref="myeditor"></editor>
+                <editor  @input="onEditorInput" @on-select="onEditorSelect" ref="myeditor"></editor>
               </Card>
           </div>
           <div slot="bottom">
@@ -110,6 +109,7 @@
   </div>
 </template>
 <script>
+  import { format } from 'sql-formatter'
   import flow from './workFlow'
   import ICol from '../../../node_modules/iview/src/components/grid/col.vue'
   import axios from 'axios'
@@ -191,17 +191,6 @@
       }
     },
     methods: {
-      setCompletions (editor, session, pos, prefix, callback) {
-        let wordList = []
-        wordList = this.wordList
-        callback(null, wordList.map(function (word) {
-          return {
-            caption: word.vl,
-            value: word.vl,
-            meta: word.meta
-          }
-        }))
-      },
       matchNode (node, vl) {
         return (node.title === vl.title && node.nodeKey === vl.nodeKey)
       },
@@ -219,7 +208,9 @@
             if (this.matchNode(i, vl)) {
               this.put_info.dbcon = c.title
               this.put_info.base = i.title
-              this.wordList = this.wordList_origin.concat(this.db_keyword[i.title])
+              // 设置自动补全字段名
+              this.wordList = this.db_keyword[c.title][i.title]
+              this.setAutoCompleWord()
               this.put_info.export_data = c.export
               return ''
             }
@@ -229,7 +220,9 @@
                 this.put_info.dbcon = c.title
                 this.put_info.tablename = t.title
                 this.put_info.export_data = c.export
-                this.wordList = this.wordList_origin.concat(this.db_keyword[i.title])
+                // 设置自动补全字段名
+                this.wordList = this.db_keyword[c.title][i.title]
+                this.setAutoCompleWord()
                 return ''
               }
             }
@@ -253,6 +246,7 @@
       Getbasename (vl) {
         if (vl.length !== 0) {
           this.choseName(vl[0])
+          this.ClearForm()
           if (this.put_info.dbcon !== '' && this.put_info.base !== '' && this.put_info.tablename !== '') {
             axios.put(`${util.url}/search`, {'base': this.put_info.base, 'table': this.put_info.tablename, 'dbcon': this.put_info.dbcon})
             .then(res => {
@@ -272,21 +266,10 @@
           }
         }
       },
-      editorInit: function () {
-        require('brace/mode/mysql')
-        require('brace/theme/xcode')
-      },
       beautify () {
-        axios.put(`${util.url}/sqlsyntax/beautify`, {
-          'data': this.formItem.textarea
-        })
-          .then(res => {
-            this.formItem.textarea = res.data
-            this.formItem.selectContent = ''
-          })
-          .catch(error => {
-            util.err_notice(error)
-          })
+        this.formItem.textarea = format(this.formItem.textarea)
+        this.formItem.selectContent = ''
+        this.$refs.myeditor.setValue(this.formItem.textarea)
       },
       splice_arr (page) {
         this.page = page
@@ -295,9 +278,6 @@
         this.splice_length = length
       },
       ClearForm () {
-        this.formItem.textarea = ''
-        this.formItem.selectContent = ''
-        this.columnsName = []
         this.$refs.pager.currentPage = 1
         this.total = 0
         this.page = 1
@@ -325,6 +305,7 @@
             }
           })
           this.GetSlaveDelay()
+          this.ClearForm()
           axios.post(`${util.url}/search`, {
             'sql': this.formItem.selectContent.length > 2 ? this.formItem.selectContent : this.formItem.textarea,
             'address': JSON.stringify(address)
@@ -395,8 +376,15 @@
           this.data1 = JSON.parse(JSON.stringify(this.data2))
         }
       },
-      getSelect (val) {
+      onEditorSelect (val) {
         this.tmpGetselect = val
+      },
+      onEditorInput (val) {
+        this.formItem.textarea = val
+        localStorage.setItem('querySql', this.formItem.textarea)
+      },
+      setAutoCompleWord () {
+        this.$refs.myeditor.setHintOptions(this.wordList)
       },
       setSelect () {
         let tmp = this.tmpGetselect.replace(/\s+/g, ' ')
@@ -443,7 +431,6 @@
         } else if (this.split1 >= 0.5) {
           this.split1 = 0.5
         }
-        this.$refs.myeditor.parent_resize()
       }
     },
     mounted () {
@@ -458,11 +445,6 @@
               .then(res => {
                 this.data1 = JSON.parse(res.data['info'])
                 this.data2 = JSON.parse(res.data['info'])
-                let tWord = util.highlight.split('|')
-                for (let i of tWord) {
-                  this.wordList_origin.push({'vl': i, 'meta': '关键字'})
-                }
-                this.wordList = JSON.parse(JSON.stringify(this.wordList_origin))
                 this.db_keyword = res.data.highlight
                 let errorList = res.data['error_list']
                 for (let i of errorList) {
@@ -478,6 +460,8 @@
             })
           }
         })
+      this.formItem.textarea = localStorage.getItem('querySql') || ''
+      this.$refs.myeditor.setValue(this.formItem.textarea)
     },
     created () {
       this.debouncedFilter = util._.debounce(this.keyfilter, 500)

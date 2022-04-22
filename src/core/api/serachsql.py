@@ -297,41 +297,33 @@ class query_worklf(baseview.BaseView):
 
         elif request.data['mode'] == 'info':
             data = []
-            highlist = {}
+            highlist_res = {}
             error_list = []
             databaseSet = query_order.objects.filter(username=request.user, query_per=1, delete_yn=1).all()
             for dbcon in databaseSet:
                 try:
                     tablelist = []
+                    highlist = {}
                     conn = DatabaseList.objects.filter(connection_name=dbcon.connection_name, delete_yn=1).first()
                     if conn:
                         _conn = conn.get_conn(dictCursor=True)
                         with _conn as f:
-                            db_list = f.get_dbs()
-                            dataname = db_list.get('data',[])
-                        children = []
+                            tables_cols_list = f.get_tables().get('data',[])
+                            for item in tables_cols_list:
+                                if item['table_schema'] in highlist:
+                                    highlist[item['table_schema']].update({item['table_name']: item['cols'].split(',')})
+                                else:
+                                    highlist[item['table_schema']] = {item['table_name']: item['cols'].split(',')}
                         ignore = exclued_db_list()
-                        for index, uc in sorted(enumerate(dataname), reverse=True):
-                            for cc in ignore:
-                                if uc['Database'] == cc:
-                                    del dataname[index]
-                        for i in dataname:
-                            _conn = conn.get_conn(database= i['Database'], dictCursor=True)
-                            with _conn as f:
-                                table_list = f.get_tables()
-                                tablename = table_list.get('data', [])
-                            highlist[i['Database']] = [{'vl': i['Database'], 'meta': '库名'}]
-                            for c in tablename:
-                                key = 'Tables_in_%s' % i['Database']
-                                highlist[i['Database']].append({'vl': c[key], 'meta': '表名'})
-                                children.append({
-                                    'title': c[key]
-                                })
+                        for item in ignore:
+                            if item in highlist.keys():
+                                del highlist[item]
+
+                        for db in highlist.keys():
                             tablelist.append({
-                                'title': i['Database'],
-                                'children': children
+                                'title': db,
+                                'children': [{'title': table} for table in highlist[db].keys()]
                             })
-                            children = []
                         db_info_tree = {
                             'title': dbcon.connection_name,
                             'expand': 'true',
@@ -339,10 +331,11 @@ class query_worklf(baseview.BaseView):
                             'export': dbcon.export
                         }
                         data.append(db_info_tree)
+                        highlist_res.update({dbcon.connection_name: highlist})
                 except Exception as e:
                     CUSTOM_ERROR.error(e)
                     error_list.append(str(e))
-            return Response({'info': json.dumps(data), 'status': 'status', 'highlight': highlist, 'error_list': error_list})
+            return Response({'info': json.dumps(data), 'status': 'status', 'highlight': highlist_res, 'error_list': error_list})
 
     def delete(self, request, args: str = None):
 

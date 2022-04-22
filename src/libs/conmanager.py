@@ -112,8 +112,11 @@ class MysqlOpter(DbOpter):
     def get_dicts(self):
         pass
     
-    def get_tables(self):
-        return self.search('show tables;')
+    def get_tables(self, datanames=[]):
+        sql = """SELECT table_schema, table_name, group_concat(column_name) cols FROM information_schema.columns group by table_schema,table_name"""
+        if datanames:
+            sql = """SELECT table_schema, table_name, group_concat(column_name) cols FROM information_schema.columns where table_schema in ('{}') group by table_schema,table_name""".format("','".join(datanames))
+        return self.search(sql)
 
     def desc_table(self, table_name, db=None, **kwargs):
         if db:
@@ -236,8 +239,21 @@ class PostgresOpter(DbOpter):
         pass
     
 
-    def get_tables(self, schema=None):
-        return self.search("""select CONCAT(schemaname, '.', tablename) as "Tables_in_{}" FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';""".format(self.db))
+    def get_tables(self, datanames=[]):
+        sql = """select table_schema, table_name, array_to_string(array_agg(column_name), ',') cols
+                from 
+                (SELECT table_catalog as table_schema,CONCAT(table_schema, '.', table_name) as table_name, column_name
+                FROM information_schema.columns 
+                where table_schema not in ('pg_catalog','information_schema') ) tmp
+                group by table_schema,table_name"""
+        if datanames:
+            sql = """select table_schema, table_name, array_to_string(array_agg(column_name), ',') cols
+                from 
+                (SELECT table_catalog as table_schema,CONCAT(table_schema, '.', table_name) as table_name, column_name
+                FROM information_schema.columns 
+                where table_schema not in ('pg_catalog','information_schema') and table_schema in ('{}')) tmp
+                group by table_schema,table_name""".format("','".join(datanames))
+        return self.search(sql)
 
 
     def desc_table(self, table_name, **kwargs):

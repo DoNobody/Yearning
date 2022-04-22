@@ -113,8 +113,8 @@ class addressing(baseview.BaseView):
                 try:
                     _c = _connection.get_conn(database=basename)
                     with _c as f:
-                        ret = f.get_tables()
-                        res = [item[0] for item in ret["data"]]
+                        ret = f.get_tables(datanames=[basename])
+                        res = set([item[1] for item in ret["data"]])
                         return Response(res)
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')

@@ -38,17 +38,16 @@ class adminpremisson(baseview.SuperUserpermissions):
 
         _conn = _connection.get_conn(database = basename, dictCursor=True)
         with _conn as f: 
-            res = f.get_tables()
+            res = f.get_tables(datanames=[basename])
             for i in res['data']:
-                colname = "Tables_in_{}".format(basename)
-                desc_table = f.desc_table(i[colname])
+                desc_table = f.desc_table(i['table_name'])
                 for c in desc_table.get("data",[]):
                     tmp_dict = {}
                     if not c.get('COLUMN_NAME'):
                         continue
                     tmp_dict.update({
                         "BaseName": basename,
-                        "TableName": i[colname],
+                        "TableName": i['table_name'],
                         "Name": _connection.connection_name,
                         "Field":c.get('COLUMN_NAME')
                     })

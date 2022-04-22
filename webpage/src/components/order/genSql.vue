@@ -1,12 +1,12 @@
 <style lang="less">
-  @import '../../styles/common.less';
-  @import 'components/table.less';
+  // @import '../../styles/common.less';
+  // @import 'components/table.less';
 
-  p {
-    word-wrap: break-word;
-    word-break: break-all;
-    overflow: hidden;
-  }
+  // p {
+  //   word-wrap: break-word;
+  //   word-break: break-all;
+  //   overflow: hidden;
+  // }
 </style>
 <template>
   <div>
@@ -48,7 +48,7 @@
             <br>
             <Tabs value="order1" style="height: 300px;overflow-y: scroll;">
               <TabPane label="DDL语句" name="order1">
-                <p v-for="list in sql" style="font-size: 12px;color:#2b85e4"> {{ list }}<br><br></p>
+                <p v-for="list in sql" v-bind:key="list" style="font-size: 12px;color:#2b85e4"> {{ list }}<br><br></p>
               </TabPane>
               <TabPane label="提交工单" name="order2">
                 <Button type="primary" style="margin-left: 25%;margin-top: 20%;" @click.native="orderswitch"
@@ -69,9 +69,9 @@
             <Tabs v-model="tabs">
               <TabPane label="手动模式" name="order1" icon="md-code">
                 <Form>
-                  <FormItem>
-                    <editor v-model="formDynamic" @init="editorInit" @setCompletions="setCompletions" style="min-height: 250px !important;"></editor>
-                  </FormItem>
+                  <div style="min-height: 200px;">
+                    <editor  @input="onEditorInput" ref="myeditor" ></editor>
+                  </div>
                   <FormItem>
                     <Table :columns="columnsName" :data="Testresults" highlight-row></Table>
                   </FormItem>
@@ -110,7 +110,9 @@
                            @on-indexdata="getindexconfirm"></editindex>
               </TabPane>
               <TabPane label="建表语句" name="order5" icon="md-crop">
-                <p v-html="TableCreateSql"></p>
+                <div>
+                  <editor ref="tableCreateSql" v-bind:autofocus="false" v-bind:readOnly="true"></editor>
+                </div>
               </TabPane>
             </Tabs>
           </div>
@@ -135,7 +137,7 @@
               <p>{{formItem.tablename}}</p>
             </FormItem>
             <FormItem label="执行SQL:">
-              <p v-for="i in sql">{{i}}</p>
+              <p v-for="i in sql" v-bind:key="i">{{i}}</p>
             </FormItem>
             <FormItem label="工单提交说明:" required>
               <Input v-model="formItem.text" placeholder="请输入工单说明"></Input>
@@ -391,7 +393,7 @@
           'decimal',
           'float',
           'double',
-          'jason'
+          'json'
         ],
         assigned: [],
         formDynamic: '',
@@ -401,18 +403,9 @@
       }
     },
     methods: {
-      setCompletions (editor, session, pos, prefix, callback) {
-        callback(null, this.wordList.map(function (word) {
-          return {
-            caption: word.vl,
-            value: word.vl,
-            meta: word.meta
-          }
-        }))
-      },
-      editorInit: function () {
-        require('brace/mode/mysql')
-        require('brace/theme/xcode')
+      onEditorInput (val) {
+        this.formDynamic = val
+        localStorage.setItem('genSql', this.formDynamic)
       },
       test_sql () {
         let ddl = ['select', 'insert', 'update', 'delete']
@@ -510,8 +503,9 @@
                 if (res.data.sql === undefined || res.data.sql.length === 0) {
                   this.TableCreateSql = ''
                 } else {
-                  this.TableCreateSql = res.data.sql[0]['Create Sql'].replace(/\n/g, '<br>')
+                  this.TableCreateSql = res.data.sql[0]['Create Sql']
                 }
+                this.$refs.tableCreateSql.setValue(this.TableCreateSql)
                 this.TableIndex = res.data.index
                 this.$Spin.hide()
               })
@@ -583,6 +577,7 @@
                   this.formDynamic = i.replace(/\s+/g, ' ').replace(';', ';\n')
                 }
               }
+              this.$refs.myeditor.setValue(this.formDynamic)
               this.putdata = []
               this.add_row = []
               this.tabs = 'order1'
@@ -634,14 +629,14 @@
             this.formDynamic = i.replace(/\s+/g, ' ')
           }
         }
+        this.$refs.myeditor.setValue(this.formDynamic)
         this.tabs = 'order1'
       }
     },
     mounted () {
-      for (let i of util.highlight.split('|')) {
-        this.wordList.push({'vl': i, 'meta': '关键字'})
-      }
       this.getdatabases()
+      this.formDynamic = localStorage.getItem('genSql') || ''
+      this.$refs.myeditor.setValue(this.formDynamic)
     },
     watch: {
       'formItem.computer_room': function (val) {

@@ -1,93 +1,113 @@
-<!-- thanks by wangjianhui2464-->
-<style lang="less">
- 
-  .ace_editor{
-    height: 100%;
-
-  }
-  .ace-xcode{
-    height: 100%;
-  }
-</style>
 <template>
-  <div style="width: 100%;height: 100%; min-height: 50px;"></div>
+    <textarea ref='mycode'></textarea>
 </template>
 
 <script>
-  require(['emmet/emmet'], function (data) {
-    window.emmet = data.emmet
-  })
-  const ace = require('brace')
-  export default {
-    name: 'editor',
-    props: {
-      value: {
-        type: String,
-        required: true
-      }
+// 核心样式
+import 'codemirror/theme/idea.css';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/addon/hint/show-hint.css';
+
+const CodeMirror = require('codemirror');
+require('codemirror/mode/sql/sql.js');
+require('codemirror/addon/selection/active-line.js');
+require('codemirror/addon/edit/matchbrackets.js');
+require('codemirror/addon/hint/show-hint.js');
+require('codemirror/addon/display/autorefresh.js');
+require('codemirror/addon/display/placeholder.js');
+require('./sql-hint.js')
+
+export default {
+  props: {
+    value: {
+      type: String,
+      default: ''
     },
-    data () {
-      return {
-        editor: null,
-        contentBackup: '',
-        selectContent: ''
-      }
+    autofocus: {
+      type: Boolean,
+      default: true
     },
-    watch: {
-      value (val) {
-        if (this.contentBackup !== val) {
-          this.editor.setValue(val, 1)
-        }
-      },
-      theme: function (newTheme) {
-        this.editor.setTheme('ace/theme/' + newTheme)
-      },
-      lang: function (newLang) {
-        this.editor.getSession().setMode('ace/mode/' + newLang)
-      }
-    },
-    methods: {
-      parent_resize () {
-        this.editor.resize()
-      }
-    },
-    mounted () {
-      let vm = this
-      require('brace/ext/emmet')
-      require('brace/ext/language_tools')
-      let editor = vm.editor = ace.edit(this.$el)
-      this.$emit('init', editor)
-      let staticWordCompleter = {
-        getCompletions: function (editor, session, pos, prefix, callback) {
-          vm.$emit('setCompletions', editor, session, pos, prefix, callback)
-        }
-      }
-      editor.completers = [staticWordCompleter]
-      editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true
+    readOnly: {
+      type: [Boolean, String],
+      default: false
+    }
+  },
+  data () {
+    return {
+      editorText: null,
+      sqlText: '',
+      selectText: ''
+    }
+  },
+  mounted () {
+    this.init()
+    this.setSize()
+  },
+  methods: {
+    init () {
+      this.editorText = CodeMirror.fromTextArea(this.$refs.mycode, {
+        mode: 'text/x-sparksql',
+        theme: 'idea',
+        lineNumbers: true,
+        lineWrapping: true,
+        line: true,
+        styleActiveLine: true,
+        showCursorWhenSelecting: true,
+        autofocus: this.autofocus,
+        readOnly: this.readOnly,
+        dragDrop: true,
+        // 括号配对
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        // 自动补全
+        extraKeys: { 'Tab': 'autocomplete' }, // 自定义快捷键
+        hintOptions: {
+          completeSingle: false,
+          // 自定义提示选项
+          tables: {}
+        },
+        placeholder: '\n\n\n请输入SQL\n点击左侧表名,查看表信息\n支持自动补全表名和字段名'
       })
-      editor.$blockScrolling = Infinity
-      editor.setFontSize(14)
-      editor.setOption('enableEmmet', true)
-      editor.getSession().setMode('ace/mode/mysql')
-      editor.setTheme('ace/theme/xcode')
-      editor.setValue(this.value, 1)
-      editor.on('change', function () {
-        let content = editor.getValue()
-        vm.$emit('input', content)
-        vm.contentBackup = content
+      this.editorEvents()
+    },
+    setValue (sqls) {
+      this.editorText.setValue(sqls || this.value);
+    },
+    setSize () {
+      this.editorText.setSize('auto', '100%');
+    },
+    setHintOptions (tables) {
+      this.editorText.options.hintOptions.tables = tables
+    },
+    editorEvents () {
+      // 设置代码提示
+      this.editorText.on('keyup', (cm, event) => {
+        if (event.keyCode >= 65 && event.keyCode <= 90) {
+          cm.showHint();
+        }
+        if (!cm.state.completionActive && ((event.keyCode >= 65 && event.keyCode <= 90) || event.keyCode === 52 || event.keyCode === 219 || event.keyCode === 190)) {
+          CodeMirror.commands.autocomplete(cm, null, {completeSingle: false});
+        }
       })
-      editor.on('changeSelection', function () {
-        let selected = editor.getSelectedText()
-        if (selected !== this.selectContent) {
-          this.selectContent = selected
-          vm.$emit('on-select', this.selectContent)
+
+      // 代码输入的双向绑定
+      this.editorText.on('change', (editor) => {
+        // 这里要用多一个载体去获取值,不然会重复赋值卡顿
+        this.sqlText = editor.getValue()
+        if (this.$emit) {
+          this.$emit('input', this.sqlText)
+        }
+      })
+
+      // 双向绑定 选择
+       this.editorText.on('cursorActivity', (editor) => {
+        // 这里要用多一个载体去获取值,不然会重复赋值卡顿
+        this.selectText = editor.getSelection()
+        if (this.$emit) {
+          this.$emit('on-select', this.selectText)
         }
       })
     }
   }
+}
 </script>
-
-<style scoped>
-</style>

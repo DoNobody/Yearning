@@ -98,7 +98,9 @@
             <Icon type="ios-crop"></Icon>
             填写sql语句
           </p>
-          <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions" style="min-height: 250px !important;"></editor>
+          <div style="min-height: 200px;">
+            <editor  @input="onEditorInput" ref="myeditor" v-bind:autofocus="false"></editor>
+          </div>   
           <br>
           <br>
           <Table :columns="columnsName" :data="Testresults" highlight-row></Table>
@@ -108,6 +110,7 @@
   </div>
 </template>
 <script>
+  import { format } from 'sql-formatter'
   import ICol from '../../../node_modules/iview/src/components/grid/col.vue'
   import axios from 'axios'
   import util from '../../libs/util'
@@ -203,36 +206,20 @@
         },
         id: null,
         assigned: [],
-        wordList: [],
         backup_disable: false
       }
     },
     methods: {
-      setCompletions (editor, session, pos, prefix, callback) {
-        callback(null, this.wordList.map(function (word) {
-          return {
-            caption: word.vl,
-            value: word.vl,
-            meta: word.meta
-          }
-        }))
-      },
-      editorInit: function () {
-        require('brace/mode/mysql')
-        require('brace/theme/xcode')
-      },
       beautify () {
-        axios.put(`${util.url}/sqlsyntax/beautify`, {
-          'data': this.formItem.textarea
-        })
-          .then(res => {
-            this.formItem.textarea = res.data
-          })
-          .catch(error => {
-            util.err_notice(error)
-          })
+        this.formItem.textarea = format(this.formItem.textarea)
+        this.$refs.myeditor.setValue(this.formItem.textarea)
+      },
+      onEditorInput (val) {
+        this.formItem.textarea = val
+        localStorage.setItem('sqlSyntax', this.formItem.textarea)
       },
       Connection_Name (val) {
+        this.ClearForm()
         // 初始化备选项
         this.datalist.basenamelist = []
         this.datalist.assigend = []
@@ -378,6 +365,8 @@
       },
       ClearForm () {
         this.formItem.textarea = ''
+        this.$refs.myeditor.setValue(this.formItem.textarea)
+        localStorage.setItem('sqlSyntax', this.formItem.textarea)
       },
       getdatabases (dmlcon = []) {
         axios.put(`${util.url}/workorder/connection`, {
@@ -405,9 +394,8 @@
     },
     mounted () {
       this.getdatabases()
-      for (let i of util.highlight.split('|')) {
-        this.wordList.push({'vl': i, 'meta': '关键字'})
-      }
+      this.formItem.textarea = localStorage.getItem('sqlSyntax') || ''
+      this.$refs.myeditor.setValue(this.formItem.textarea)
     }
   }
 </script>

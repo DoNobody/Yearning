@@ -7,13 +7,12 @@ services:
     # ports:
     #  - 3306:3306
     volumes:
-      - /server/docker_share/mysql:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
       - /etc/timezone:/etc/timezone
       - /etc/localtime:/etc/localtime
       - ./etc/mysql/my.cnf:/etc/mysql/my.cnf
     environment:
       - MYSQL_ROOT_PASSWORD=root
-    network_mode: bridge
     restart: always
 
   inception:
@@ -25,7 +24,6 @@ services:
       - ./etc/goinception/config.toml:/etc/config.toml
       - /etc/timezone:/etc/timezone
       - /etc/localtime:/etc/localtime
-    network_mode: bridge
     restart: always
     links:
       - db
@@ -46,7 +44,6 @@ services:
       MYSQL_PASSWORD: root
       MYSQL_USER: root
       MYSQL_ADDR: db
-    network_mode: bridge
     restart: always
     links:
       - db
@@ -63,7 +60,6 @@ services:
     image: registry.cn-beijing.aliyuncs.com/donobody/yearningweb
     depends_on: 
       - yearning
-    network_mode: bridge
     restart: always
     ports:
       - 80:80
@@ -76,3 +72,5 @@ services:
     environment:
       - NODE_ENV=production
 
+volumes:
+  mysql-data:
