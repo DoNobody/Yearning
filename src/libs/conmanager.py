@@ -113,9 +113,9 @@ class MysqlOpter(DbOpter):
         pass
     
     def get_tables(self, datanames=[]):
-        sql = """SELECT table_schema, table_name, group_concat(column_name) cols FROM information_schema.columns group by table_schema,table_name"""
+        sql = """SELECT table_schema as table_schema, table_name as table_name, group_concat(column_name) cols FROM information_schema.columns group by table_schema,table_name"""
         if datanames:
-            sql = """SELECT table_schema, table_name, group_concat(column_name) cols FROM information_schema.columns where table_schema in ('{}') group by table_schema,table_name""".format("','".join(datanames))
+            sql = """SELECT table_schema as table_schema, table_name as table_name, group_concat(column_name) cols FROM information_schema.columns where table_schema in ('{}') group by table_schema,table_name""".format("','".join(datanames))
         return self.search(sql)
 
     def desc_table(self, table_name, db=None, **kwargs):
